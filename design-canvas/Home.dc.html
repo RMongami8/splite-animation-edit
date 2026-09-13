@@ -1,0 +1,69 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg-0:oklch(0.985 0.003 250); --bg-1:oklch(0.97 0.004 250); --bg-2:oklch(0.945 0.006 250);
+    --border:oklch(0.82 0.008 250/0.9); --border-soft:oklch(0.82 0.008 250/0.5);
+    --text-0:oklch(0.22 0.008 250); --text-1:oklch(0.42 0.01 250); --text-2:oklch(0.58 0.012 250);
+    --accent:oklch(0.64 0.17 55); --accent-ink:oklch(0.99 0.01 75); --accent-2:oklch(0.53 0.13 210);
+    --r-md:12px; --r-lg:16px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg-0);color:var(--text-0);font-family:'Manrope',system-ui,sans-serif;}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+  .icon{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+  .app{width:1280px;height:800px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:44px;background:radial-gradient(ellipse at 50% 0%,oklch(0.96 0.012 60),var(--bg-0) 60%);}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--accent),var(--accent-2));}
+  .brand h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-0.01em;color:var(--text-0);}
+  .brand p{margin:2px 0 0;font-size:13px;color:var(--text-2);}
+  .cards{display:flex;gap:22px;}
+  .card{width:300px;background:var(--bg-1);border:1px solid var(--border-soft);border-radius:var(--r-lg);padding:26px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 2px rgba(30,20,10,0.04);}
+  .card.primary{border-color:oklch(0.7 0.1 55/0.6);background:linear-gradient(160deg,oklch(0.96 0.03 60),var(--bg-1) 60%);}
+  .card-icon{width:46px;height:46px;border-radius:12px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;color:var(--accent);}
+  .card.primary .card-icon{background:var(--accent);color:var(--accent-ink);}
+  .card h3{margin:0;font-size:16px;font-weight:700;color:var(--text-0);}
+  .card p{margin:0;font-size:12.5px;color:var(--text-1);line-height:1.6;flex:1;}
+  .card-cta{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--text-0);}
+  .card.primary .card-cta{color:var(--accent);}
+  .foot{font-size:11px;color:var(--text-2);}
+</style>
+</helmet>
+<div class="app">
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <div><h1>SpriteSheet Studio</h1><p>1枚の画像からコマ送りアニメーションシートを作る</p></div>
+  </div>
+  <div class="cards">
+    <div class="card primary">
+      <div class="card-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5"/></svg></div>
+      <h3>素材をつくる</h3>
+      <p>参照画像から First Frame と動作動画をAIで生成する。候補を比べて採用を選べる。</p>
+      <div class="card-cta">はじめる →</div>
+    </div>
+    <div class="card">
+      <div class="card-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 4v11M8 11l4 4 4-4M5 19h14"/></svg></div>
+      <h3>素材を取り込んで編集する</h3>
+      <p>手持ちの動画・連番画像・シート画像を取り込み、コマ編集からすぐに始められる。</p>
+      <div class="card-cta">取り込む →</div>
+    </div>
+    <div class="card">
+      <div class="card-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M4 4v7a4 4 0 0 0 4 4h12M20 4v7a4 4 0 0 1-4 4"/><path d="M9 20l3-3 3 3"/></svg></div>
+      <h3>保存した編集を再開する</h3>
+      <p>直近のComposition一覧から、前回の続きをそのまま開く。</p>
+      <div class="card-cta">再開する →</div>
+    </div>
+  </div>
+  <div class="foot mono">APIキーが無くても「取り込んで編集する」はすぐに使えます</div>
+</div>
+</x-dc>
+</body>
+</html>

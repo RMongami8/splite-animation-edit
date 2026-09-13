@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg-0:oklch(0.13 0.005 250); --bg-1:oklch(0.17 0.006 250); --bg-2:oklch(0.215 0.007 250);
+    --bg-3:oklch(0.27 0.008 250); --border:oklch(0.30 0.008 250/0.7); --border-soft:oklch(0.30 0.008 250/0.35);
+    --text-0:oklch(0.94 0.004 250); --text-1:oklch(0.70 0.01 250); --text-2:oklch(0.50 0.012 250);
+    --accent:oklch(0.78 0.15 75); --accent-ink:oklch(0.18 0.03 75); --accent-2:oklch(0.72 0.14 200);
+    --r-sm:5px; --r-md:8px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg-0);color:var(--text-0);font-family:'Manrope',system-ui,sans-serif;}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+  .icon{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+  .app{width:1440px;height:860px;display:grid;grid-template-rows:44px 1fr;overflow:hidden;}
+  header{display:flex;align-items:center;gap:10px;padding:0 12px;background:var(--bg-1);border-bottom:1px solid var(--border);}
+  .brand-mark{width:18px;height:18px;border-radius:5px;background:linear-gradient(135deg,var(--accent),var(--accent-2));}
+  .title{font-size:12.5px;font-weight:700;}
+  .spacer{flex:1;}
+  .to-edit{display:flex;align-items:center;gap:6px;background:var(--accent);color:var(--accent-ink);border:none;border-radius:var(--r-sm);padding:6px 13px;font-weight:800;font-size:12px;}
+
+  .work{display:grid;grid-template-columns:48px 1fr 260px;min-height:0;}
+  .rail{background:var(--bg-1);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0;}
+  .rail-btn{width:34px;height:34px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:var(--text-2);}
+  .rail-btn.active{background:var(--bg-3);color:var(--accent);box-shadow:inset 2px 0 0 var(--accent);}
+
+  .center{display:flex;flex-direction:column;min-height:0;}
+  .toolbar{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border-soft);}
+  .toolbar h3{margin:0;font-size:13px;font-weight:700;}
+  .toolbar .hint{font-size:11px;color:var(--text-2);}
+  .gallery{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px;align-content:start;overflow-y:auto;}
+  .cand{border-radius:var(--r-md);overflow:hidden;border:2px solid var(--border-soft);}
+  .cand.selected{border-color:var(--accent);}
+  .cand-img{height:150px;background:linear-gradient(160deg,oklch(0.3 0.09 230),oklch(0.2 0.05 250));}
+  .cand-foot{padding:6px 8px;background:var(--bg-1);font-size:10px;color:var(--text-2);display:flex;justify-content:space-between;}
+  .adopt{color:var(--accent);font-weight:800;}
+  .hist-dock{height:110px;border-top:1px solid var(--border);background:var(--bg-1);display:flex;flex-direction:column;}
+  .hist-head{padding:6px 16px;font-size:10.5px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-2);border-bottom:1px solid var(--border-soft);}
+  .hist-strip{display:flex;gap:8px;padding:8px 16px;overflow-x:auto;}
+  .hist-card{width:64px;height:64px;border-radius:6px;flex-shrink:0;background:linear-gradient(160deg,oklch(0.28 0.08 230),oklch(0.18 0.05 250));border:1.5px solid var(--border-soft);}
+
+  .right-dock{background:var(--bg-1);border-left:1px solid var(--border);padding:0;overflow-y:auto;}
+  .rd-sec{border-bottom:1px solid var(--border-soft);padding:12px 14px;}
+  .rd-sec h4{margin:0 0 8px;font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-2);}
+  .ta{width:100%;background:var(--bg-2);border:1px solid var(--border-soft);border-radius:6px;padding:8px;font-size:11.5px;color:var(--text-0);height:70px;font-family:inherit;resize:none;}
+  .select{width:100%;background:var(--bg-2);border:1px solid var(--border-soft);border-radius:6px;padding:6px 8px;font-size:11.5px;color:var(--text-0);margin-top:8px;}
+  .gen-btn{width:100%;margin-top:10px;background:var(--accent);color:var(--accent-ink);border:none;border-radius:6px;padding:8px;font-weight:800;font-size:12px;}
+</style>
+</helmet>
+<div class="app">
+  <header>
+    <div class="brand-mark"></div>
+    <div class="title">素材づくり — 基準画像</div>
+    <div class="spacer"></div>
+    <button class="to-edit">②編集へ渡す</button>
+  </header>
+  <div class="work">
+    <div class="rail">
+      <div class="rail-btn" title="参照素材"><svg class="icon" viewBox="0 0 20 20"><path d="M10 3v9M7 9l3 3 3-3"/><path d="M4 16h12"/></svg></div>
+      <div class="rail-btn active" title="基準画像"><svg class="icon" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="2"/><circle cx="7.5" cy="9" r="1.3"/><path d="M3 14l4-4 3 3 3-4 4 5"/></svg></div>
+      <div class="rail-btn" title="動画入力"><svg class="icon" viewBox="0 0 20 20"><rect x="3" y="5" width="11" height="10" rx="1.5"/><path d="M14 8l4-2v8l-4-2z"/></svg></div>
+      <div class="rail-btn" title="モーション"><svg class="icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M8 7l6 3-6 3z"/></svg></div>
+    </div>
+    <div class="center">
+      <div class="toolbar"><h3>First Frame 候補</h3><span class="hint">— 気に入るまで再生成できます</span></div>
+      <div class="gallery">
+        <div class="cand selected"><div class="cand-img"></div><div class="cand-foot">候補4<span class="adopt">採用</span></div></div>
+        <div class="cand"><div class="cand-img" style="background:linear-gradient(160deg,oklch(0.28 0.08 40),oklch(0.2 0.05 30));"></div><div class="cand-foot">候補3</div></div>
+        <div class="cand"><div class="cand-img" style="background:linear-gradient(160deg,oklch(0.3 0.09 280),oklch(0.2 0.05 300));"></div><div class="cand-foot">候補2</div></div>
+        <div class="cand"><div class="cand-img" style="background:linear-gradient(160deg,oklch(0.3 0.1 140),oklch(0.2 0.05 150));"></div><div class="cand-foot">候補1</div></div>
+      </div>
+      <div class="hist-dock">
+        <div class="hist-head">生成履歴</div>
+        <div class="hist-strip">
+          <div class="hist-card"></div><div class="hist-card" style="background:linear-gradient(160deg,oklch(0.28 0.08 40),oklch(0.18 0.05 30));"></div>
+          <div class="hist-card" style="background:linear-gradient(160deg,oklch(0.3 0.09 280),oklch(0.18 0.05 300));"></div><div class="hist-card" style="background:linear-gradient(160deg,oklch(0.3 0.1 140),oklch(0.18 0.05 150));"></div>
+        </div>
+      </div>
+    </div>
+    <div class="right-dock">
+      <div class="rd-sec">
+        <h4>Prompt</h4>
+        <textarea class="ta">全身、単色背景、影なし、ゲームキャラクター風</textarea>
+        <select class="select"><option>gpt-image-2</option><option>gpt-image-2.5-sunburst</option></select>
+        <button class="gen-btn">生成する</button>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg-0:oklch(0.15 0.006 250); --bg-1:oklch(0.19 0.007 250); --bg-2:oklch(0.235 0.008 250);
+    --border:oklch(0.32 0.008 250/0.7); --border-soft:oklch(0.32 0.008 250/0.35);
+    --text-0:oklch(0.94 0.004 250); --text-1:oklch(0.72 0.01 250); --text-2:oklch(0.52 0.012 250);
+    --accent:oklch(0.78 0.15 75); --accent-ink:oklch(0.18 0.03 75); --accent-2:oklch(0.72 0.14 200);
+    --r-sm:6px; --r-md:10px; --r-lg:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg-0);color:var(--text-0);font-family:'Manrope',system-ui,sans-serif;}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+  .icon{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+  .app{width:1440px;height:860px;display:grid;grid-template-rows:52px auto 1fr;overflow:hidden;}
+  header{display:flex;align-items:center;gap:14px;padding:0 18px;background:var(--bg-1);border-bottom:1px solid var(--border);}
+  .brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14.5px;}
+  .brand-mark{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,var(--accent),var(--accent-2));}
+  .spacer{flex:1;}
+  .to-edit{display:flex;align-items:center;gap:6px;background:var(--bg-2);border:1px solid var(--border-soft);color:var(--text-1);border-radius:var(--r-sm);padding:6px 12px;font-size:12px;font-weight:700;}
+
+  .stepper{display:flex;align-items:center;justify-content:center;gap:0;padding:16px 40px 14px;border-bottom:1px solid var(--border-soft);}
+  .step{display:flex;flex-direction:column;align-items:center;gap:6px;width:190px;position:relative;}
+  .step-circle{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;border:2px solid var(--border);color:var(--text-2);background:var(--bg-1);}
+  .step.done .step-circle{border-color:var(--accent-2);color:var(--accent-2);background:oklch(0.25 0.05 200);}
+  .step.active .step-circle{border-color:var(--accent);color:var(--accent-ink);background:var(--accent);width:36px;height:36px;font-size:14px;box-shadow:0 0 0 5px oklch(0.78 0.15 75/0.15);}
+  .step-label{font-size:11.5px;font-weight:700;color:var(--text-2);}
+  .step.done .step-label{color:var(--accent-2);} .step.active .step-label{color:var(--text-0);}
+  .step-line{position:absolute;top:15px;left:50%;width:100%;height:2px;background:var(--border);z-index:-1;}
+  .step.done .step-line{background:var(--accent-2);}
+
+  .work{display:flex;flex-direction:column;align-items:center;padding:22px 40px;gap:16px;overflow-y:auto;}
+  .work-head{text-align:center;}
+  .work-head h2{margin:0;font-size:16px;font-weight:800;}
+  .work-head p{margin:4px 0 0;font-size:12px;color:var(--text-2);}
+  .gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;width:1000px;}
+  .cand{border-radius:var(--r-md);overflow:hidden;border:2px solid var(--border-soft);}
+  .cand.selected{border-color:var(--accent);box-shadow:0 0 0 3px oklch(0.78 0.15 75/0.25);}
+  .cand-img{height:170px;background:linear-gradient(160deg,oklch(0.3 0.09 230),oklch(0.2 0.05 250));}
+  .cand-foot{padding:8px 10px;background:var(--bg-1);display:flex;align-items:center;justify-content:space-between;}
+  .cand-foot span{font-size:11px;color:var(--text-2);}
+  .adopt{font-size:10px;font-weight:800;color:var(--accent);}
+  .promptbar{width:1000px;display:flex;gap:10px;background:var(--bg-1);border:1px solid var(--border-soft);border-radius:var(--r-md);padding:10px;}
+  .promptbar input{flex:1;background:var(--bg-2);border:1px solid var(--border-soft);border-radius:6px;padding:9px 12px;font-size:12.5px;color:var(--text-0);}
+  .gen-btn{background:var(--accent);color:var(--accent-ink);border:none;border-radius:6px;padding:9px 18px;font-weight:800;font-size:12.5px;}
+  .next-row{width:1000px;display:flex;justify-content:flex-end;}
+  .next-btn{background:var(--accent);color:var(--accent-ink);border:none;border-radius:var(--r-sm);padding:10px 20px;font-weight:800;font-size:13px;}
+</style>
+</helmet>
+<div class="app">
+  <header>
+    <div class="brand"><div class="brand-mark"></div>SpriteSheet Studio</div>
+    <div class="spacer"></div>
+    <button class="to-edit">②編集へ渡す →</button>
+  </header>
+  <div class="stepper">
+    <div class="step done"><div class="step-line"></div><div class="step-circle"><svg class="icon" viewBox="0 0 20 20" style="width:13px;height:13px;stroke-width:2.5;"><path d="M4 10l4 4 8-8"/></svg></div><div class="step-label">参照素材</div></div>
+    <div class="step active"><div class="step-line"></div><div class="step-circle">2</div><div class="step-label">基準画像</div></div>
+    <div class="step"><div class="step-line"></div><div class="step-circle">3</div><div class="step-label">動画入力</div></div>
+    <div class="step"><div class="step-line"></div><div class="step-circle">4</div><div class="step-label">モーション</div></div>
+    <div class="step"><div class="step-circle">5</div><div class="step-label">受け渡し</div></div>
+  </div>
+  <div class="work">
+    <div class="work-head"><h2>気に入る First Frame が出るまで再生成できます</h2><p>採用した1枚だけが次のステップに進みます</p></div>
+    <div class="gallery">
+      <div class="cand selected"><div class="cand-img"></div><div class="cand-foot"><span>候補 4</span><span class="adopt">採用</span></div></div>
+      <div class="cand"><div class="cand-img" style="background:linear-gradient(160deg,oklch(0.28 0.08 40),oklch(0.2 0.05 30));"></div><div class="cand-foot"><span>候補 3</span></div></div>
+      <div class="cand"><div class="cand-img" style="background:linear-gradient(160deg,oklch(0.3 0.09 280),oklch(0.2 0.05 300));"></div><div class="cand-foot"><span>候補 2</span></div></div>
+      <div class="cand"><div class="cand-img" style="background:linear-gradient(160deg,oklch(0.3 0.1 140),oklch(0.2 0.05 150));"></div><div class="cand-foot"><span>候補 1</span></div></div>
+    </div>
+    <div class="promptbar">
+      <input value="全身、単色背景、影なし、ゲームキャラクター風" class="mono">
+      <button class="gen-btn">もう一度生成</button>
+    </div>
+    <div class="next-row"><button class="next-btn">次へ: 動画入力の準備 →</button></div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg-0:oklch(0.15 0.006 250); --bg-1:oklch(0.19 0.007 250); --bg-2:oklch(0.235 0.008 250);
+    --bg-3:oklch(0.29 0.009 250); --border:oklch(0.32 0.008 250/0.7); --border-soft:oklch(0.32 0.008 250/0.35);
+    --text-0:oklch(0.94 0.004 250); --text-1:oklch(0.72 0.01 250); --text-2:oklch(0.52 0.012 250);
+    --accent:oklch(0.78 0.15 75); --accent-ink:oklch(0.18 0.03 75); --accent-2:oklch(0.72 0.14 200);
+    --r-sm:6px; --r-md:10px; --r-lg:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg-0);color:var(--text-0);font-family:'Manrope',system-ui,sans-serif;}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+  .icon{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+  .app{width:1440px;height:860px;display:grid;grid-template-rows:56px 1fr;overflow:hidden;}
+  header{display:flex;align-items:center;gap:16px;padding:0 16px;background:var(--bg-1);border-bottom:1px solid var(--border);}
+  .brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;}
+  .brand-mark{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--accent),var(--accent-2));}
+  .back{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-2);}
+  .steps{display:flex;align-items:center;gap:6px;margin-left:8px;}
+  .step-pill{display:flex;align-items:center;gap:5px;padding:4px 9px 4px 6px;border-radius:999px;font-size:11.5px;color:var(--text-2);}
+  .step-pill.done{color:var(--accent-2);} .step-pill.active{color:var(--accent-ink);background:var(--accent);font-weight:700;}
+  .step-dot{width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;border:1.5px solid currentColor;flex-shrink:0;}
+  .step-pill.active .step-dot{border-color:var(--accent-ink);}
+  .spacer{flex:1;}
+  .to-edit{display:flex;align-items:center;gap:6px;background:var(--bg-2);border:1px solid var(--border-soft);color:var(--text-1);border-radius:var(--r-sm);padding:6px 12px;font-size:12.5px;font-weight:700;}
+
+  .mid{display:grid;grid-template-columns:280px 1fr 300px;min-height:0;}
+  .panel{background:var(--bg-1);border-right:1px solid var(--border);padding:14px;overflow-y:auto;}
+  .panel.right{border-right:none;border-left:1px solid var(--border);}
+  .sec{margin-bottom:18px;}
+  .sec-title{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-2);margin-bottom:8px;}
+  .refimg{width:100%;height:130px;border-radius:var(--r-md);background:linear-gradient(135deg,oklch(0.32 0.1 250),oklch(0.22 0.06 280));border:1px solid var(--border-soft);display:flex;align-items:center;justify-content:center;color:var(--text-2);font-size:11px;}
+  .dropzone{margin-top:8px;border:1.5px dashed var(--border);border-radius:var(--r-sm);padding:14px;text-align:center;font-size:11px;color:var(--text-2);}
+
+  .gallery-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px;}
+  .gallery-head h2{margin:0;font-size:15px;font-weight:800;}
+  .gallery-head p{margin:2px 0 0;font-size:11.5px;color:var(--text-2);}
+  .regen{display:flex;align-items:center;gap:6px;background:var(--accent);color:var(--accent-ink);border:none;border-radius:var(--r-sm);padding:8px 14px;font-weight:800;font-size:12.5px;}
+  .gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:6px 20px 20px;}
+  .cand{border-radius:var(--r-md);overflow:hidden;border:2px solid var(--border-soft);}
+  .cand.selected{border-color:var(--accent);box-shadow:0 0 0 3px oklch(0.78 0.15 75/0.25);}
+  .cand-img{height:150px;background:linear-gradient(160deg,oklch(0.3 0.09 230),oklch(0.2 0.05 250));display:flex;align-items:center;justify-content:center;}
+  .cand-foot{padding:7px 9px;background:var(--bg-1);display:flex;align-items:center;justify-content:space-between;}
+  .cand-foot span{font-size:10.5px;color:var(--text-2);}
+  .adopt{font-size:10px;font-weight:800;color:var(--accent);}
+
+  form.mini{background:var(--bg-2);border:1px solid var(--border-soft);border-radius:var(--r-md);padding:12px;margin-bottom:14px;}
+  .mini-label{font-size:11px;color:var(--text-1);font-weight:600;margin-bottom:6px;}
+  textarea.ta{width:100%;background:var(--bg-1);border:1px solid var(--border-soft);border-radius:6px;padding:8px;font-size:11.5px;color:var(--text-0);height:64px;resize:none;font-family:inherit;}
+  .select{width:100%;background:var(--bg-1);border:1px solid var(--border-soft);border-radius:6px;padding:6px 8px;font-size:11.5px;color:var(--text-0);margin-top:6px;}
+  .gen-btn{width:100%;margin-top:10px;background:var(--accent);color:var(--accent-ink);border:none;border-radius:6px;padding:9px;font-weight:800;font-size:12.5px;}
+  .history{display:flex;flex-direction:column;gap:6px;}
+  .hist-item{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-2);}
+  .hist-dot{width:6px;height:6px;border-radius:50%;background:var(--text-2);flex-shrink:0;}
+  .hist-dot.ok{background:oklch(0.75 0.16 145);}
+</style>
+</helmet>
+<div class="app">
+  <header>
+    <div class="brand"><div class="brand-mark"></div>SpriteSheet Studio</div>
+    <div class="back"><svg class="icon" viewBox="0 0 20 20"><path d="M12 5l-5 5 5 5"/></svg>ホーム</div>
+    <div class="steps">
+      <div class="step-pill done"><span class="step-dot"><svg class="icon" viewBox="0 0 20 20" style="width:9px;height:9px;stroke-width:3;"><path d="M4 10l4 4 8-8"/></svg></span>参照素材</div>
+      <div class="step-pill active"><span class="step-dot">2</span>基準画像</div>
+      <div class="step-pill"><span class="step-dot">3</span>動画入力</div>
+      <div class="step-pill"><span class="step-dot">4</span>モーション</div>
+      <div class="step-pill"><span class="step-dot">5</span>受け渡し</div>
+    </div>
+    <div class="spacer"></div>
+    <button class="to-edit">②編集へ渡す →</button>
+  </header>
+  <div class="mid">
+    <div class="panel">
+      <div class="sec">
+        <div class="sec-title">参照画像</div>
+        <div class="refimg">reference.png</div>
+      </div>
+      <div class="sec">
+        <div class="sec-title">動作見本動画（任意）</div>
+        <div class="dropzone">動画をドラッグ&ドロップ</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="gallery-head">
+        <div><h2>First Frame 候補</h2><p>気に入るまで再生成できます。採用したものだけが②へ渡ります</p></div>
+        <button class="regen"><svg class="icon" viewBox="0 0 20 20" style="stroke:var(--accent-ink);"><path d="M4 10a6 6 0 0 1 10.5-4M16 10a6 6 0 0 1-10.5 4"/><path d="M14 3v4h-4M6 17v-4h4"/></svg>再生成</button>
+      </div>
+      <div class="gallery">
+        <div class="cand selected"><div class="cand-img"></div><div class="cand-foot"><span>候補 4</span><span class="adopt">採用中</span></div></div>
+        <div class="cand"><div class="cand-img" style="background:linear-gradient(160deg,oklch(0.28 0.08 40),oklch(0.2 0.05 30));"></div><div class="cand-foot"><span>候補 3</span></div></div>
+        <div class="cand"><div class="cand-img" style="background:linear-gradient(160deg,oklch(0.3 0.09 280),oklch(0.2 0.05 300));"></div><div class="cand-foot"><span>候補 2</span></div></div>
+        <div class="cand"><div class="cand-img" style="background:linear-gradient(160deg,oklch(0.3 0.1 140),oklch(0.2 0.05 150));"></div><div class="cand-foot"><span>候補 1</span></div></div>
+      </div>
+    </div>
+
+    <div class="panel right">
+      <form class="mini">
+        <div class="mini-label">生成プロンプト</div>
+        <textarea class="ta">全身、単色背景、影なし、ゲームキャラクター風</textarea>
+        <select class="select"><option>gpt-image-2</option><option>gpt-image-2.5-sunburst</option></select>
+        <button class="gen-btn" type="button">生成する</button>
+      </form>
+      <div class="sec">
+        <div class="sec-title">生成履歴</div>
+        <div class="history">
+          <div class="hist-item"><span class="hist-dot ok"></span>候補4 — 12秒前</div>
+          <div class="hist-item"><span class="hist-dot ok"></span>候補3 — 1分前</div>
+          <div class="hist-item"><span class="hist-dot ok"></span>候補2 — 2分前</div>
+          <div class="hist-item"><span class="hist-dot ok"></span>候補1 — 3分前</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

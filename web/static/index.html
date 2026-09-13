@@ -1,0 +1,1758 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpriteSheet Studio</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* ==========================================================================
+   デザイントークン（確定デザイン: 案A・ライトモード）
+   コントラストは WCAG AA (通常テキスト4.5:1 / アイコン3:1) を満たす値を
+   数値計算で選定済み:
+     --accent      #b55000  白文字を載せて 4.95:1
+     --text-2      #646a70  bg-1 上で 5.04:1
+     --accent-2    #00637a  bg-1 上で 6.27:1 / addバッジ上で 4.86:1
+   ========================================================================== */
+:root{
+  color-scheme: light;
+  --bg-0:oklch(0.985 0.003 250);
+  --bg-1:oklch(0.97 0.004 250);
+  --bg-2:oklch(0.945 0.006 250);
+  --bg-3:oklch(0.895 0.008 250);
+  --border:oklch(0.82 0.008 250/0.9);
+  --border-soft:oklch(0.82 0.008 250/0.5);
+  --text-0:oklch(0.22 0.008 250);
+  --text-1:oklch(0.42 0.01 250);
+  --text-2:oklch(0.52 0.012 250);
+  --accent:oklch(0.55 0.16 55);
+  --accent-ink:oklch(0.99 0.01 75);
+  --accent-2:oklch(0.44 0.13 210);
+  --danger:oklch(0.50 0.19 25);
+  --success:oklch(0.52 0.14 145);
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+  --header-h:56px;
+  --label-w:104px;
+  /* 左右パネル幅。広い画面では中央の余白を削ってパネルに回す */
+  --panel-left-w:clamp(200px,15vw,300px);
+  --panel-right-w:clamp(268px,21vw,400px);
+}
+*{box-sizing:border-box;}
+html,body{height:100%;margin:0;overflow:hidden;}
+body{
+  background:var(--bg-0);color:var(--text-0);
+  font-family:'Manrope',system-ui,-apple-system,'Segoe UI','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;
+  font-size:13px;line-height:1.5;
+}
+.mono{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,monospace;}
+a{color:var(--accent);text-decoration:none;}
+a:hover{color:oklch(0.46 0.16 55);text-decoration:underline;}
+button{font-family:inherit;font-size:inherit;cursor:pointer;}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,
+[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+.icon{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.view{display:none;height:100%;}
+.view.active{display:block;}
+/* hidden属性は display を持つ規則に負けるため、明示的に打ち消す
+   (モーダルや .stage-empty など display:flex を持つ要素の初期非表示に必須) */
+[hidden]{display:none !important;}
+
+/* ---------- 共通パーツ ---------- */
+.btn{display:inline-flex;align-items:center;gap:6px;background:var(--bg-2);
+  border:1px solid var(--border-soft);color:var(--text-1);border-radius:var(--r-sm);
+  padding:6px 11px;font-size:12.5px;font-weight:600;}
+.btn:hover:not(:disabled){background:var(--bg-3);color:var(--text-0);}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;}
+.btn-primary:hover:not(:disabled){background:oklch(0.49 0.16 55);color:var(--accent-ink);}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+  border-radius:var(--r-sm);background:transparent;border:1px solid transparent;color:var(--text-2);}
+.icon-btn:hover:not(:disabled){background:var(--bg-3);color:var(--text-0);}
+.icon-btn:disabled{opacity:0.35;cursor:not-allowed;}
+.icon-btn.danger:hover{color:var(--danger);}
+.badge{font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:5px;
+  text-transform:uppercase;letter-spacing:0.03em;white-space:nowrap;}
+.badge.normal{background:var(--bg-3);color:var(--text-1);}
+.badge.add{background:oklch(0.88 0.06 210);color:var(--accent-2);}
+.badge.todo{background:var(--bg-3);color:var(--text-2);text-transform:none;letter-spacing:0;}
+.sec-title{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-2);}
+
+/* ---------- トースト ---------- */
+#toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:200;
+  display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;}
+.toast{pointer-events:auto;max-width:min(560px,92vw);display:flex;align-items:flex-start;gap:8px;
+  background:var(--bg-1);border:1px solid var(--border);border-left:3px solid var(--danger);
+  border-radius:var(--r-sm);padding:10px 12px;font-size:12.5px;color:var(--text-0);
+  box-shadow:0 8px 24px -10px rgba(30,25,20,0.3);}
+.toast.ok{border-left-color:var(--success);}
+.toast .close{margin-left:4px;}
+
+/* ---------- ホーム ---------- */
+.home{height:100%;overflow-y:auto;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:clamp(24px,4vh,44px);padding:40px 24px;
+  background:radial-gradient(ellipse at 50% 0%,oklch(0.96 0.012 60),var(--bg-0) 60%);}
+.home-brand{display:flex;align-items:center;gap:12px;}
+.brand-mark{width:40px;height:40px;border-radius:11px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));}
+.home-brand h1{margin:0;font-size:clamp(19px,2.4vw,24px);font-weight:800;letter-spacing:-0.01em;}
+.home-brand p{margin:2px 0 0;font-size:13px;color:var(--text-2);}
+.home-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,300px));
+  gap:20px;justify-content:center;width:100%;max-width:1000px;}
+.home-card{display:flex;flex-direction:column;gap:13px;text-align:left;
+  background:var(--bg-1);border:1px solid var(--border-soft);border-radius:var(--r-lg);
+  padding:24px;box-shadow:0 1px 2px rgba(30,20,10,0.04);}
+.home-card:hover{border-color:var(--border);box-shadow:0 6px 18px -10px rgba(30,20,10,0.18);}
+.home-card.primary{border-color:oklch(0.7 0.1 55/0.6);
+  background:linear-gradient(160deg,oklch(0.96 0.03 60),var(--bg-1) 60%);}
+.home-card .ci{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;background:var(--bg-2);color:var(--accent);}
+.home-card.primary .ci{background:var(--accent);color:var(--accent-ink);}
+.home-card .ci .icon{width:22px;height:22px;stroke-width:1.6;}
+.home-card h3{margin:0;font-size:15.5px;font-weight:700;}
+.home-card p{margin:0;font-size:12.5px;color:var(--text-1);flex:1;}
+.home-card .cta{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--text-0);}
+.home-card.primary .cta{color:var(--accent);}
+.home-recent{width:100%;max-width:1000px;}
+.home-recent h4{margin:0 0 8px;}
+.recent-list{display:flex;flex-wrap:wrap;gap:8px;}
+.recent-item{display:flex;align-items:center;gap:9px;background:var(--bg-1);
+  border:1px solid var(--border-soft);border-radius:var(--r-md);padding:8px 11px;}
+.recent-item:hover{border-color:var(--border);}
+.recent-item .rn{font-size:12.5px;font-weight:600;}
+.recent-item .rm{font-size:10.5px;color:var(--text-2);}
+.home-foot{font-size:11.5px;color:var(--text-2);text-align:center;}
+
+/* ---------- 汎用アプリシェル（①②共通） ---------- */
+/* 単一列を minmax(0,1fr) で固定する。これを auto にすると、ヘッダーやタイムラインの
+   min-content 幅がビューポートを超えたときに列自体が広がり、右パネルが画面外へ
+   押し出されてしまう(内容が黙って切られる)。 */
+/* 中段(キャンバス)には最低120pxを残し、足りないときはタイムライン側を縮める。
+   タイムライン行を clamp() の固定値にしていると、画面が低いときに中段が
+   高さ0まで潰れてキャンバスが消える。 */
+.app{display:grid;grid-template-columns:minmax(0,1fr);
+  grid-template-rows:var(--header-h) minmax(120px,1fr) minmax(96px,clamp(150px,22vh,240px));
+  height:100%;overflow:hidden;}
+.app.no-timeline{grid-template-rows:var(--header-h) minmax(0,1fr);}
+.app-header{display:flex;align-items:center;gap:12px;padding:0 12px;min-width:0;overflow:hidden;
+  background:var(--bg-1);border-bottom:1px solid var(--border);}
+.hdr-brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;flex-shrink:0;}
+.hdr-brand .brand-mark{width:22px;height:22px;border-radius:6px;}
+.hdr-brand span{white-space:nowrap;}
+.comp-picker{display:flex;align-items:center;gap:4px;min-width:0;}
+.comp-picker select{max-width:200px;background:var(--bg-2);border:1px solid var(--border-soft);
+  border-radius:var(--r-sm);padding:5px 8px;font-size:12.5px;color:var(--text-0);
+  text-overflow:ellipsis;min-width:0;}
+.hdr-spacer{flex:1;min-width:8px;}
+.save-state{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-2);white-space:nowrap;}
+.save-state .dot{width:6px;height:6px;border-radius:50%;background:var(--success);flex-shrink:0;}
+
+/* ステップ表示 */
+.steps{display:flex;align-items:center;gap:4px;min-width:0;overflow:hidden;}
+.step-pill{display:flex;align-items:center;gap:5px;padding:4px 9px 4px 6px;border-radius:999px;
+  font-size:11.5px;color:var(--text-2);background:transparent;border:none;white-space:nowrap;}
+.step-pill .dot{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:9.5px;font-weight:800;border:1.5px solid currentColor;flex-shrink:0;}
+.step-pill.done{color:var(--accent-2);}
+.step-pill.active{color:var(--accent-ink);background:var(--accent);font-weight:700;}
+.step-pill.active .dot{border-color:var(--accent-ink);}
+.step-pill.todo{color:var(--text-2);opacity:0.75;cursor:default;}
+
+/* ---------- 中段3カラム ---------- */
+.mid{display:grid;
+  grid-template-columns:var(--panel-left-w) minmax(0,1fr) var(--panel-right-w);
+  min-height:0;position:relative;}
+.mid > *{min-width:0;min-height:0;}
+.panel{background:var(--bg-1);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;}
+.panel-left{border-right:1px solid var(--border);}
+.panel-right{border-left:1px solid var(--border);}
+body.left-collapsed .panel-left,body.right-collapsed .panel-right{display:none;}
+body.left-collapsed .mid{--panel-left-w:0px;}
+body.right-collapsed .mid{--panel-right-w:0px;}
+
+.panel-sec-head{display:flex;align-items:center;justify-content:space-between;gap:6px;
+  padding:10px 10px 6px;position:sticky;top:0;background:var(--bg-1);z-index:2;}
+
+/* Assets */
+.asset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;padding:0 10px 14px;}
+.asset-card{display:block;text-align:left;width:100%;padding:0;overflow:hidden;
+  background:var(--bg-2);border:1.5px solid var(--border-soft);border-radius:var(--r-md);}
+.asset-card:hover{border-color:var(--border);}
+.asset-card.selected{border-color:var(--accent);box-shadow:0 0 0 2px oklch(0.55 0.16 55/0.22);}
+.asset-thumb{height:54px;display:flex;align-items:center;justify-content:center;
+  background:repeating-conic-gradient(var(--bg-3) 0% 25%, var(--bg-2) 0% 50%) 0 0/12px 12px;}
+.asset-thumb img{max-width:100%;max-height:100%;object-fit:contain;image-rendering:pixelated;}
+.asset-meta{padding:5px 7px 7px;}
+.asset-kind{font-size:9.5px;color:var(--text-2);text-transform:uppercase;letter-spacing:0.04em;}
+.asset-name{font-size:11px;font-weight:600;color:var(--text-0);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.panel-empty{padding:4px 10px 14px;font-size:11.5px;color:var(--text-2);}
+
+/* Layers */
+.layer-list{display:flex;flex-direction:column;gap:3px;padding:0 6px 14px;}
+.layer-row{display:flex;align-items:center;gap:5px;padding:6px 6px;border-radius:var(--r-sm);
+  border:1px solid transparent;width:100%;background:transparent;text-align:left;}
+.layer-row:hover{background:var(--bg-2);}
+.layer-row.selected{background:var(--bg-3);box-shadow:inset 2px 0 0 var(--accent);}
+.layer-row .eye{color:var(--text-2);}
+.layer-row.is-hidden .layer-name{opacity:0.45;text-decoration:line-through;}
+.layer-name{font-size:12.5px;font-weight:600;flex:1;min-width:0;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;}
+.layer-row .icon-btn{width:20px;height:20px;}
+.layer-row .icon-btn .icon{width:13px;height:13px;}
+
+/* ---------- 中央ステージ ---------- */
+.stage-wrap{position:relative;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;background:var(--bg-0);}
+.stage-wrap[data-bg="checker"]{
+  background:repeating-conic-gradient(var(--bg-2) 0% 25%, var(--bg-0) 0% 50%) 0 0/22px 22px;}
+.stage-wrap[data-bg="white"]{background:#ffffff;}
+.stage-wrap[data-bg="black"]{background:#101010;}
+#stage{image-rendering:pixelated;border-radius:var(--r-sm);
+  box-shadow:0 0 0 1px var(--border),0 18px 40px -22px rgba(30,25,20,0.28);}
+.stage-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  padding:24px;text-align:center;font-size:12.5px;color:var(--text-2);}
+.stage-toolbar{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:9px;max-width:calc(100% - 24px);
+  background:var(--bg-1);border:1px solid var(--border);border-radius:999px;padding:5px 12px;
+  box-shadow:0 8px 22px -12px rgba(30,25,20,0.25);}
+.play-btn{width:28px;height:28px;border-radius:50%;flex-shrink:0;border:none;
+  background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;}
+.play-btn:hover{background:oklch(0.49 0.16 55);}
+.play-btn .icon{width:14px;height:14px;}
+.stage-toolbar .sep{width:1px;height:16px;background:var(--border);flex-shrink:0;}
+.stage-toolbar .time{font-size:11.5px;color:var(--text-1);white-space:nowrap;}
+.stage-toolbar select{background:var(--bg-2);border:1px solid var(--border-soft);
+  border-radius:var(--r-sm);padding:3px 6px;font-size:11px;color:var(--text-1);}
+
+/* ---------- インスペクタ ---------- */
+.panel-right{container-type:inline-size;}
+.inspector{display:flex;flex-direction:column;gap:12px;padding:10px;}
+.insp-block{background:var(--bg-2);border:1px solid var(--border-soft);border-radius:var(--r-md);padding:11px;}
+.insp-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px;}
+.insp-head h4{margin:0;font-size:11px;font-weight:700;letter-spacing:0.04em;
+  text-transform:uppercase;color:var(--text-2);min-width:0;overflow:hidden;text-overflow:ellipsis;}
+/* ラベル列は縮んで省略記号になり、コントロール列は固定幅を保つ。
+   flex + space-between だとラベルがコントロールを押し出して切り取られていた。 */
+/* ラベル列は自然幅まで(足りなければ省略記号)、コントロール列は96〜140pxで
+   伸縮する。狭いパネルでは両者が少しずつ譲り合うので、ラベルが極端に
+   削られたりコントロールが潰れたりしない。 */
+.insp-field{display:grid;grid-template-columns:minmax(0,max-content) minmax(96px,140px);
+  align-items:center;gap:10px;margin:7px 0;}
+.insp-field > label{font-size:12px;color:var(--text-1);min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.insp-input{width:100%;background:var(--bg-0);border:1px solid var(--border-soft);
+  border-radius:var(--r-sm);padding:5px 7px;font-size:12px;color:var(--text-0);}
+.insp-pair{display:flex;gap:5px;width:100%;}
+.insp-pair .insp-input{width:50%;}
+.insp-range{display:flex;align-items:center;gap:7px;width:100%;}
+.insp-range input[type=range]{flex:1;min-width:0;accent-color:var(--accent);}
+.insp-range span{font-size:11px;color:var(--text-2);}
+.insp-toggle{width:36px;height:20px;border-radius:999px;position:relative;flex-shrink:0;
+  background:var(--bg-3);border:1px solid var(--border-soft);}
+.insp-toggle::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;
+  border-radius:50%;background:var(--bg-0);box-shadow:0 1px 2px rgba(0,0,0,0.18);transition:left .12s;}
+.insp-toggle.on{background:var(--accent);border-color:var(--accent);}
+.insp-toggle.on::after{left:18px;background:var(--accent-ink);}
+.insp-drop{display:flex;flex-direction:column;gap:2px;align-items:center;margin-top:9px;
+  border:1.5px dashed var(--border);border-radius:var(--r-sm);padding:11px;text-align:center;
+  font-size:11.5px;color:var(--text-1);cursor:pointer;}
+.insp-drop small{font-size:10px;color:var(--text-2);}
+.insp-drop:hover,.insp-drop.over{border-color:var(--accent);color:var(--accent);background:oklch(0.55 0.16 55/0.05);}
+.insp-empty{font-size:12px;color:var(--text-2);padding:10px 2px;}
+/* パネルが狭いときはラベルを上に積む。横並びのままだとラベルが「不透明…」の
+   ように削られて読めなくなるため。 */
+@container (max-width:340px){
+  .insp-field{grid-template-columns:minmax(0,1fr);gap:3px;margin:10px 0;}
+  .insp-field > label{white-space:normal;overflow:visible;}
+}
+
+/* ---------- タイムライン ---------- */
+.timeline{display:flex;flex-direction:column;min-height:0;
+  background:var(--bg-1);border-top:1px solid var(--border);}
+.tl-head{display:flex;align-items:center;gap:10px;padding:6px 12px;
+  border-bottom:1px solid var(--border-soft);font-size:11.5px;color:var(--text-2);}
+.tl-head .hint{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tl-zoom{display:flex;align-items:center;gap:2px;margin-left:auto;}
+.tl-body{flex:1;min-height:0;overflow:auto;}
+.tl-inner{position:relative;padding:6px 0 10px;}
+.tl-ruler-row,.tl-row{display:flex;align-items:stretch;}
+.tl-gutter{width:var(--label-w);flex-shrink:0;position:sticky;left:0;z-index:3;
+  background:var(--bg-1);display:flex;align-items:center;padding:0 10px;
+  font-size:10px;color:var(--text-2);}
+.tl-ruler{position:relative;height:20px;flex-shrink:0;}
+.tl-tick{position:absolute;top:0;bottom:0;border-left:1px solid var(--border-soft);padding-left:4px;}
+.tl-tick span{font-size:9.5px;color:var(--text-2);}
+.tl-row{align-items:center;height:56px;}
+.tl-label{width:var(--label-w);flex-shrink:0;position:sticky;left:0;z-index:3;
+  background:var(--bg-1);display:flex;flex-direction:column;justify-content:center;
+  gap:1px;padding:0 10px;border-right:1px solid var(--border-soft);height:100%;}
+.tl-label-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tl-label-meta{font-size:9.5px;color:var(--text-2);}
+.tl-label.is-hidden{opacity:0.5;}
+.tl-track{position:relative;height:100%;display:flex;align-items:center;flex-shrink:0;}
+.tl-cells{display:flex;gap:2px;}
+.tl-cell{position:relative;height:46px;flex-shrink:0;overflow:hidden;cursor:grab;
+  border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--bg-2);}
+.tl-cell img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;
+  background:repeating-conic-gradient(var(--bg-3) 0% 25%, var(--bg-2) 0% 50%) 0 0/10px 10px;}
+.tl-cell.selected{border-color:var(--accent);box-shadow:0 0 0 2px oklch(0.55 0.16 55/0.28);}
+.tl-cell.dragging{opacity:0.45;}
+.tl-cell.drop-target{border-color:var(--accent-2);box-shadow:0 0 0 2px oklch(0.44 0.13 210/0.3);}
+.tl-dur{position:absolute;bottom:1px;right:3px;font-size:8.5px;color:var(--text-0);
+  background:oklch(0.985 0.003 250/0.82);border-radius:3px;padding:0 2px;}
+.tl-playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);
+  pointer-events:none;z-index:4;}
+.tl-empty{padding:14px calc(var(--label-w) + 10px);font-size:12px;color:var(--text-2);}
+
+/* ---------- コマ選択・削除モード ---------- */
+.tl-cell.primary{box-shadow:0 0 0 2px oklch(0.55 0.16 55/0.5);}
+.tl-cell.del-mode{cursor:crosshair;}
+.tl-delmark{display:none;position:absolute;top:1px;left:2px;font-size:10px;font-weight:800;line-height:1;
+  color:#fff;background:var(--danger);border-radius:3px;padding:1px 3px;pointer-events:none;}
+.tl-cell.del-mode.selected{border-color:var(--danger);box-shadow:0 0 0 2px oklch(0.50 0.19 25/0.3);}
+.tl-cell.del-mode.selected img{opacity:0.5;}
+.tl-cell.del-mode.selected .tl-delmark{display:block;}
+.tl-modebar{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap;color:var(--danger);font-weight:700;}
+.tl-modebar .btn{padding:3px 10px;font-size:11.5px;}
+.btn-danger{background:var(--danger);border-color:var(--danger);color:#fff;font-weight:700;}
+.btn-danger:hover:not(:disabled){background:oklch(0.44 0.19 25);color:#fff;}
+.frame-label{font-size:11.5px;color:var(--text-2);white-space:nowrap;}
+
+/* ---------- コマメニュー ---------- */
+.ctx-menu{position:fixed;z-index:200;min-width:220px;padding:5px;background:var(--bg-1);
+  border:1px solid var(--border);border-radius:var(--r-md);box-shadow:0 14px 34px -14px rgba(30,25,20,0.35);}
+.ctx-title{font-size:10.5px;color:var(--text-2);padding:4px 9px 6px;}
+.ctx-item{display:flex;width:100%;align-items:center;justify-content:space-between;gap:16px;
+  background:none;border:none;border-radius:var(--r-sm);padding:6px 9px;font-size:12.5px;
+  color:var(--text-0);text-align:left;cursor:pointer;}
+.ctx-item:hover:not(:disabled),.ctx-item:focus-visible{background:var(--bg-3);outline:none;}
+.ctx-item:disabled{opacity:0.4;cursor:not-allowed;}
+.ctx-item.danger{color:var(--danger);}
+.ctx-hint{font-size:10.5px;color:var(--text-2);}
+.ctx-sep{height:1px;background:var(--border-soft);margin:4px 2px;}
+
+/* ---------- 編集モード(移動・拡大縮小) ---------- */
+.xf-overlay{position:absolute;inset:0;pointer-events:none;z-index:5;}
+.xf-box{position:absolute;border:1.5px dashed var(--accent);box-shadow:0 0 0 1px rgba(255,255,255,0.7);
+  pointer-events:auto;cursor:move;}
+.xf-handle{position:absolute;width:11px;height:11px;background:var(--bg-0);
+  border:1.5px solid var(--accent);border-radius:2px;}
+.xf-handle.nw{left:-6px;top:-6px;cursor:nwse-resize;}
+.xf-handle.ne{right:-6px;top:-6px;cursor:nesw-resize;}
+.xf-handle.sw{left:-6px;bottom:-6px;cursor:nesw-resize;}
+.xf-handle.se{right:-6px;bottom:-6px;cursor:nwse-resize;}
+.stage-wrap.editing #stage{box-shadow:0 0 0 2px var(--accent);}
+.insp-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;}
+.insp-help{font-size:11px;color:var(--text-2);margin:8px 0 0;line-height:1.5;}
+.insp-edit-btn{width:100%;justify-content:center;margin-top:8px;}
+
+/* ---------- レイヤー追加ウィザード ---------- */
+.modal.wide{width:min(820px,100%);}
+.lw-methods{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border-soft);
+  border-radius:999px;background:var(--bg-0);font-size:11.5px;color:var(--text-1);cursor:pointer;}
+.chip:has(input:checked){border-color:var(--accent);background:oklch(0.55 0.16 55/0.08);color:var(--text-0);font-weight:700;}
+.chip input{accent-color:var(--accent);margin:0;}
+.lw-param{margin-top:4px;}
+.lw-note{font-size:11px;color:var(--text-2);}
+.lw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:5px;
+  max-height:260px;overflow-y:auto;padding:2px;}
+.lw-thumb{position:relative;aspect-ratio:1;padding:0;border:1.5px solid var(--border-soft);
+  border-radius:var(--r-sm);cursor:pointer;overflow:hidden;opacity:0.45;
+  background:repeating-conic-gradient(var(--bg-3) 0% 25%, var(--bg-2) 0% 50%) 0 0/10px 10px;}
+.lw-thumb img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;display:block;}
+.lw-thumb .n{position:absolute;left:2px;bottom:1px;font-size:9px;color:var(--text-1);
+  background:oklch(0.985 0.003 250/0.85);border-radius:3px;padding:0 3px;}
+.lw-thumb .ck{display:none;position:absolute;right:2px;top:2px;width:15px;height:15px;border-radius:50%;
+  background:var(--accent);color:var(--accent-ink);font-size:10px;line-height:15px;text-align:center;font-weight:800;}
+.lw-thumb.on{opacity:1;border-color:var(--accent);}
+.lw-thumb.on .ck{display:block;}
+.lw-thumb.out{opacity:0.15;cursor:not-allowed;}
+.lw-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;}
+.lw-summary{font-size:12px;color:var(--text-0);font-weight:700;}
+.lw-explain{font-size:11.5px;color:var(--text-1);background:var(--bg-0);border:1px solid var(--border-soft);
+  border-radius:var(--r-sm);padding:7px 9px;margin:2px 0 8px !important;line-height:1.6;}
+.lw-adv summary{font-size:11.5px;color:var(--text-2);cursor:pointer;margin-bottom:6px;}
+.xf-nav{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;}
+.xf-nav .btn{padding:4px 8px;font-size:11.5px;}
+.xf-pos{font-size:11.5px;color:var(--text-1);white-space:nowrap;}
+
+/* ---------- モーダル ---------- */
+.modal-backdrop{position:fixed;inset:0;z-index:150;display:flex;align-items:center;
+  justify-content:center;padding:24px;background:oklch(0.3 0.01 250/0.35);}
+.modal{width:min(560px,100%);max-height:min(86vh,760px);overflow-y:auto;
+  background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-lg);
+  box-shadow:0 30px 70px -30px rgba(30,25,20,0.45);}
+.modal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:14px 16px;border-bottom:1px solid var(--border-soft);position:sticky;top:0;background:var(--bg-1);}
+.modal-head h3{margin:0;font-size:14.5px;font-weight:800;}
+.modal-body{padding:14px 16px 18px;display:flex;flex-direction:column;gap:14px;}
+.modal-sec{background:var(--bg-2);border:1px solid var(--border-soft);border-radius:var(--r-md);padding:12px;}
+.modal-sec h4{margin:0 0 3px;font-size:12.5px;font-weight:700;}
+.modal-sec p{margin:0 0 9px;font-size:11.5px;color:var(--text-2);}
+.field-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
+.field-row label{font-size:11.5px;color:var(--text-1);display:flex;align-items:center;gap:5px;}
+.field-row input[type=number],.field-row input[type=text],.field-row select{
+  background:var(--bg-0);border:1px solid var(--border-soft);border-radius:var(--r-sm);
+  padding:5px 7px;font-size:12px;color:var(--text-0);width:78px;}
+.field-row input[type=file]{font-size:11.5px;max-width:100%;}
+.grid-params{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:8px;margin-bottom:9px;}
+.grid-params label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--text-2);}
+.grid-params input{width:100%;}
+
+/* ---------- ①素材づくり（M3待ちのプレースホルダー） ---------- */
+.make-notice{display:flex;align-items:flex-start;gap:9px;margin:14px 16px 0;padding:11px 13px;
+  background:oklch(0.96 0.03 60);border:1px solid oklch(0.7 0.1 55/0.5);
+  border-radius:var(--r-md);font-size:12.5px;color:var(--text-0);}
+.make-notice .icon{color:var(--accent);margin-top:1px;}
+.make-grid{display:grid;grid-template-columns:minmax(200px,260px) minmax(0,1fr) minmax(200px,280px);
+  gap:14px;padding:14px 16px;min-height:0;overflow:auto;height:100%;}
+.make-grid > section{background:var(--bg-1);border:1px solid var(--border-soft);
+  border-radius:var(--r-md);padding:12px;min-width:0;}
+.make-grid.is-narrow,.make-grid[data-narrow="1"]{grid-template-columns:minmax(0,1fr);}
+.cand-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-top:10px;}
+.cand{border:2px solid var(--border-soft);border-radius:var(--r-md);overflow:hidden;background:var(--bg-2);}
+.cand.selected{border-color:var(--accent);}
+.cand .ph{height:118px;background:repeating-conic-gradient(var(--bg-3) 0% 25%, var(--bg-2) 0% 50%) 0 0/14px 14px;
+  display:flex;align-items:center;justify-content:center;color:var(--text-2);font-size:11px;}
+.cand .cf{padding:6px 8px;display:flex;justify-content:space-between;font-size:10.5px;color:var(--text-2);}
+.ph-box{border:1.5px dashed var(--border);border-radius:var(--r-sm);padding:16px;text-align:center;
+  font-size:11.5px;color:var(--text-2);}
+textarea.ph-ta{width:100%;height:66px;resize:vertical;background:var(--bg-0);
+  border:1px solid var(--border-soft);border-radius:var(--r-sm);padding:8px;
+  font-family:inherit;font-size:11.5px;color:var(--text-1);}
+
+/* ---------- レスポンシブ ---------- */
+/* ヘッダーが縮めなくなるのを防ぐため、幅が減るほど文字ラベルを畳んでいく */
+@media (max-width:1480px){ #undoBtn .lbl,#redoBtn .lbl{display:none;} }
+@media (max-width:1320px){ .steps .step-pill span.lbl{display:none;} }
+@media (max-width:1180px){ .save-state{display:none;} }
+@media (max-width:1100px){
+  /* 左右パネルはオーバーレイのドロワーにして、キャンバスを潰さない */
+  .mid,body.left-collapsed .mid,body.right-collapsed .mid,
+  body.left-collapsed.right-collapsed .mid{grid-template-columns:minmax(0,1fr);}
+  .panel-left,.panel-right{position:absolute;top:0;bottom:0;width:min(300px,82vw);z-index:30;
+    box-shadow:0 0 40px -8px rgba(30,25,20,0.35);display:none;}
+  .panel-left{left:0;} .panel-right{right:0;}
+  body.show-left .panel-left,body.show-right .panel-right{display:flex;}
+  .stage-wrap{grid-column:1;}
+}
+@media (max-width:820px){
+  .steps{display:none;}
+  .comp-picker select{max-width:120px;}
+  .make-grid{grid-template-columns:minmax(0,1fr);}
+}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- ============================ ホーム ============================ -->
+<div id="viewHome" class="view">
+  <div class="home">
+    <div class="home-brand">
+      <div class="brand-mark"></div>
+      <div>
+        <h1>SpriteSheet Studio</h1>
+        <p>1枚の画像からコマ送りアニメーションシートを作る</p>
+      </div>
+    </div>
+
+    <div class="home-cards">
+      <button class="home-card primary" id="homeMake">
+        <span class="ci"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5"/></svg></span>
+        <h3>素材をつくる</h3>
+        <p>参照画像から First Frame と動作動画をAIで生成する。候補を比べて採用を選べる。</p>
+        <span class="cta">はじめる<svg class="icon" viewBox="0 0 20 20"><path d="M4 10h11M11 6l4 4-4 4"/></svg></span>
+      </button>
+      <button class="home-card" id="homeImport">
+        <span class="ci"><svg class="icon" viewBox="0 0 24 24"><path d="M12 4v11M8 11l4 4 4-4M5 19h14"/></svg></span>
+        <h3>素材を取り込んで編集する</h3>
+        <p>手持ちの動画・連番画像・シート画像を取り込み、コマ編集からすぐに始められる。</p>
+        <span class="cta">取り込む<svg class="icon" viewBox="0 0 20 20"><path d="M4 10h11M11 6l4 4-4 4"/></svg></span>
+      </button>
+      <button class="home-card" id="homeResume">
+        <span class="ci"><svg class="icon" viewBox="0 0 24 24"><path d="M4 4v7a4 4 0 0 0 4 4h12M20 4v7a4 4 0 0 1-4 4"/><path d="M9 20l3-3 3 3"/></svg></span>
+        <h3>保存した編集を再開する</h3>
+        <p>この端末で開いた編集の一覧から、前回の続きをそのまま開く。</p>
+        <span class="cta">再開する<svg class="icon" viewBox="0 0 20 20"><path d="M4 10h11M11 6l4 4-4 4"/></svg></span>
+      </button>
+    </div>
+
+    <div class="home-recent" id="homeRecentWrap" hidden>
+      <h4 class="sec-title">最近開いた編集</h4>
+      <div class="recent-list" id="homeRecentList"></div>
+    </div>
+
+    <div class="home-foot">APIキーが無くても「取り込んで編集する」はすぐに使えます</div>
+  </div>
+</div>
+
+<!-- ==================== ①素材づくり（M3待ち） ==================== -->
+<div id="viewMake" class="view">
+  <div class="app no-timeline">
+    <header class="app-header">
+      <div class="hdr-brand"><div class="brand-mark"></div><span>SpriteSheet Studio</span></div>
+      <button class="btn" id="makeBack">
+        <svg class="icon" viewBox="0 0 20 20"><path d="M12 5l-5 5 5 5"/></svg>ホーム
+      </button>
+      <div class="steps">
+        <span class="step-pill todo"><span class="dot">1</span><span class="lbl">参照素材</span></span>
+        <span class="step-pill todo"><span class="dot">2</span><span class="lbl">基準画像</span></span>
+        <span class="step-pill todo"><span class="dot">3</span><span class="lbl">動画入力</span></span>
+        <span class="step-pill todo"><span class="dot">4</span><span class="lbl">モーション</span></span>
+        <span class="step-pill todo"><span class="dot">5</span><span class="lbl">受け渡し</span></span>
+      </div>
+      <div class="hdr-spacer"></div>
+      <button class="btn" id="makeToEdit">
+        ②素材編集へ<svg class="icon" viewBox="0 0 20 20"><path d="M4 10h11M11 6l4 4-4 4"/></svg>
+      </button>
+    </header>
+    <div style="min-height:0;overflow:auto;">
+      <div class="make-notice">
+        <svg class="icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5"/><path d="M10 6.5v4M10 13.5h.01"/></svg>
+        <div>
+          <strong>この画面はまだ動きません（画面設計のみ）。</strong>
+          生成API（First Frame / モーション）の接続は計画の M3 で実装します。
+          いまは ②素材編集 で手持ちの素材から作業できます。
+        </div>
+      </div>
+      <div class="make-grid">
+        <section>
+          <div class="sec-title">参照素材</div>
+          <div class="ph-box" style="margin-top:9px;">参照画像をドラッグ&ドロップ</div>
+          <div class="sec-title" style="margin-top:16px;">動作見本動画（任意）</div>
+          <div class="ph-box" style="margin-top:9px;">動画をドラッグ&ドロップ</div>
+        </section>
+        <section>
+          <div class="sec-title">First Frame 候補</div>
+          <p style="margin:4px 0 0;font-size:11.5px;color:var(--text-2);">
+            気に入るまで再生成し、採用した1枚だけが②へ渡ります。
+          </p>
+          <div class="cand-grid">
+            <div class="cand selected"><div class="ph">候補 1</div><div class="cf"><span>候補 1</span><span>採用</span></div></div>
+            <div class="cand"><div class="ph">候補 2</div><div class="cf"><span>候補 2</span></div></div>
+            <div class="cand"><div class="ph">候補 3</div><div class="cf"><span>候補 3</span></div></div>
+            <div class="cand"><div class="ph">候補 4</div><div class="cf"><span>候補 4</span></div></div>
+          </div>
+        </section>
+        <section>
+          <div class="sec-title">生成プロンプト</div>
+          <textarea class="ph-ta" style="margin-top:9px;" disabled>全身、単色背景、影なし、ゲームキャラクター風</textarea>
+          <button class="btn btn-primary" style="width:100%;margin-top:9px;justify-content:center;" disabled>
+            生成する（M3で実装）
+          </button>
+          <div class="sec-title" style="margin-top:16px;">生成履歴</div>
+          <div class="panel-empty" style="padding:8px 0 0;">まだありません</div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== ②素材編集 ======================== -->
+<div id="viewEdit" class="view">
+  <div class="app">
+    <header class="app-header">
+      <div class="hdr-brand"><div class="brand-mark"></div><span>SpriteSheet Studio</span></div>
+      <button class="icon-btn" id="editHome" title="ホームへ" aria-label="ホームへ">
+        <svg class="icon" viewBox="0 0 20 20"><path d="M3 9l7-6 7 6M5 8v9h10V8"/></svg>
+      </button>
+      <div class="comp-picker">
+        <select id="compSelect" aria-label="編集中のComposition"></select>
+        <button class="icon-btn" id="compNew" title="新規Compositionを作る" aria-label="新規Compositionを作る">
+          <svg class="icon" viewBox="0 0 20 20"><path d="M10 4v12M4 10h12"/></svg>
+        </button>
+      </div>
+      <div class="steps" id="stepBar"></div>
+      <div class="hdr-spacer"></div>
+      <div class="save-state" id="saveState"><span class="dot"></span>自動保存</div>
+      <button class="icon-btn" id="toggleLeft" title="素材・レイヤーパネル" aria-label="素材・レイヤーパネル">
+        <svg class="icon" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="2"/><path d="M8 4v12"/></svg>
+      </button>
+      <button class="icon-btn" id="toggleRight" title="設定パネル" aria-label="設定パネル">
+        <svg class="icon" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="2"/><path d="M12 4v12"/></svg>
+      </button>
+      <button class="btn" id="undoBtn" title="元に戻す (Ctrl+Z)">
+        <svg class="icon" viewBox="0 0 20 20"><path d="M8 5L3 10l5 5M3 10h9a4 4 0 0 1 0 8h-1"/></svg><span class="lbl">元に戻す</span>
+      </button>
+      <button class="btn" id="redoBtn" title="やり直す (Ctrl+Y)">
+        <svg class="icon" viewBox="0 0 20 20"><path d="M12 5l5 5-5 5M17 10H8a4 4 0 0 0 0 8h1"/></svg><span class="lbl">やり直す</span>
+      </button>
+    </header>
+
+    <div class="mid">
+      <aside class="panel panel-left" id="panelLeft">
+        <div class="panel-sec-head">
+          <span class="sec-title">素材</span>
+          <button class="icon-btn" id="assetAdd" title="素材を取り込む" aria-label="素材を取り込む">
+            <svg class="icon" viewBox="0 0 20 20"><path d="M10 4v12M4 10h12"/></svg>
+          </button>
+        </div>
+        <div class="asset-grid" id="assetList"></div>
+        <div class="panel-empty" id="assetEmpty" hidden>
+          まだ素材がありません。＋ から動画・連番画像・シートを取り込んでください。
+        </div>
+
+        <div class="panel-sec-head">
+          <span class="sec-title">レイヤー</span>
+          <button class="icon-btn" id="layerAdd" title="選択中の素材からレイヤーを追加" aria-label="レイヤーを追加">
+            <svg class="icon" viewBox="0 0 20 20"><path d="M10 4v12M4 10h12"/></svg>
+          </button>
+        </div>
+        <div class="layer-list" id="layerList"></div>
+        <div class="panel-empty" id="layerEmpty" hidden>
+          素材を選び、＋ でレイヤーを追加します。
+        </div>
+      </aside>
+
+      <div class="stage-wrap" id="stageWrap" data-bg="checker">
+        <canvas id="stage" width="64" height="64"></canvas>
+        <div class="stage-empty" id="stageEmpty" hidden>
+          レイヤーを追加すると、ここに合成結果が表示されます。
+        </div>
+        <div class="stage-toolbar">
+          <button class="icon-btn" id="prevFrameBtn" title="前のコマ ( , / ← )" aria-label="前のコマ">
+            <svg class="icon" viewBox="0 0 20 20"><path d="M12 5l-5 5 5 5"/></svg>
+          </button>
+          <button class="play-btn" id="playBtn" title="再生 / 停止 (Space)" aria-label="再生 / 停止">
+            <svg class="icon" viewBox="0 0 20 20" style="stroke:none;fill:currentColor;"><path d="M7 5l8 5-8 5z"/></svg>
+          </button>
+          <button class="icon-btn" id="nextFrameBtn" title="次のコマ ( . / → )" aria-label="次のコマ">
+            <svg class="icon" viewBox="0 0 20 20"><path d="M8 5l5 5-5 5"/></svg>
+          </button>
+          <span class="time mono" id="timeLabel">0 / 0 ms</span>
+          <span class="frame-label mono" id="frameLabel" hidden></span>
+          <div class="sep"></div>
+          <select id="speedSelect" aria-label="再生速度" title="プレビューの再生速度（データや書き出しには影響しません）">
+            <option value="0.1">速度 ×0.1</option>
+            <option value="0.25">速度 ×0.25</option>
+            <option value="0.5">速度 ×0.5</option>
+            <option value="0.75">速度 ×0.75</option>
+            <option value="1" selected>速度 ×1</option>
+            <option value="1.5">速度 ×1.5</option>
+            <option value="2">速度 ×2</option>
+          </select>
+          <select id="bgSelect" aria-label="背景">
+            <option value="checker">市松</option>
+            <option value="white">白</option>
+            <option value="black">黒</option>
+          </select>
+        </div>
+      </div>
+
+      <aside class="panel panel-right" id="panelRight">
+        <div class="inspector" id="inspector"></div>
+      </aside>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-head">
+        <svg class="icon" viewBox="0 0 20 20"><path d="M4 4v12M8 4v12M12 4v12M16 4v12"/></svg>
+        <span class="hint" id="tlHint">クリックで選択（Ctrl=追加・Shift=範囲）・ダブルクリックでメニュー・ドラッグで並べ替え・←/→でコマ送り</span>
+        <div class="tl-modebar" id="delBar" hidden>
+          <span>✕ 削除モード: <span id="delCount">0</span> コマ選択中（なぞって範囲選択・Ctrl+クリックで切替）</span>
+          <button class="btn btn-danger" id="delConfirm">削除</button>
+          <button class="btn" id="delCancel">キャンセル</button>
+        </div>
+        <div class="tl-zoom">
+          <button class="icon-btn" id="zoomOut" title="時間軸を縮小" aria-label="時間軸を縮小">
+            <svg class="icon" viewBox="0 0 20 20"><path d="M5 10h10"/></svg>
+          </button>
+          <button class="icon-btn" id="zoomIn" title="時間軸を拡大" aria-label="時間軸を拡大">
+            <svg class="icon" viewBox="0 0 20 20"><path d="M10 5v10M5 10h10"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="tl-body" id="timelinePanel"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== 取り込みモーダル ======================== -->
+<div id="importModal" class="modal-backdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+    <div class="modal-head">
+      <h3 id="importTitle">素材を取り込む</h3>
+      <button class="icon-btn" data-close-modal title="閉じる" aria-label="閉じる">
+        <svg class="icon" viewBox="0 0 20 20"><path d="M5 5l10 10M15 5L5 15"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <section class="modal-sec">
+        <h4>動画 / 画像を1ファイル</h4>
+        <p>種類は自動判定します（mp4などの動画、または1枚の画像）。</p>
+        <div class="field-row">
+          <input type="file" id="upFile">
+          <button class="btn btn-primary" id="upBtn">取り込む</button>
+        </div>
+      </section>
+      <section class="modal-sec">
+        <h4>連番画像</h4>
+        <p>複数ファイルを選び、再生速度(fps)を指定します。番号順（1, 2, 10…）に並べます。</p>
+        <div class="field-row">
+          <input type="file" id="seqFiles" multiple>
+          <label>fps <input type="number" id="seqFps" value="12" min="1" max="120"></label>
+          <button class="btn btn-primary" id="seqBtn">取り込む</button>
+        </div>
+      </section>
+      <section class="modal-sec">
+        <h4>グリッドシート</h4>
+        <p>1枚のシート画像をセルに分割します。列数はシート幅から自動で求めます。</p>
+        <div class="grid-params">
+          <label>セル幅 <input type="number" id="shW" value="64" min="1"></label>
+          <label>セル高 <input type="number" id="shH" value="64" min="1"></label>
+          <label>外周余白 <input type="number" id="shMargin" value="0" min="0"></label>
+          <label>セル間隔 <input type="number" id="shSpacing" value="0" min="0"></label>
+          <label>コマ数 <input type="number" id="shCount" value="8" min="1"></label>
+        </div>
+        <div class="field-row">
+          <input type="file" id="shFile">
+          <button class="btn btn-primary" id="shBtn">取り込む</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== レイヤー追加モーダル ======================== -->
+<div id="layerModal" class="modal-backdrop" hidden>
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="layerTitle">
+    <div class="modal-head">
+      <h3 id="layerTitle">レイヤーを追加</h3>
+      <button class="icon-btn" data-close-modal title="閉じる" aria-label="閉じる">
+        <svg class="icon" viewBox="0 0 20 20"><path d="M5 5l10 10M15 5L5 15"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <section class="modal-sec">
+        <h4 id="lwAssetName">素材</h4>
+        <div class="grid-params">
+          <label>レイヤー名 <input type="text" id="lyName" value="layer"></label>
+          <label>種別
+            <select id="lyKind">
+              <option value="normal">normal（通常合成）</option>
+              <option value="glow">glow（加算・発光）</option>
+              <option value="smoke">smoke（半透明）</option>
+            </select>
+          </label>
+          <label>開始コマ <input type="number" id="lwStart" value="1" min="1"></label>
+          <label>終了コマ <input type="number" id="lwEnd" value="1" min="1"></label>
+        </div>
+      </section>
+      <section class="modal-sec">
+        <h4>① 使うコマの選び方</h4>
+        <p>方法を選ぶと下の一覧に採用コマ（✓）が入ります。一覧のクリックで手直しもできます。</p>
+        <div class="lw-methods" role="radiogroup" aria-label="抽出方法">
+          <label class="chip"><input type="radio" name="lwMethod" value="all" checked>全フレーム</label>
+          <label class="chip"><input type="radio" name="lwMethod" value="every">N枚ごとに間引く</label>
+          <label class="chip"><input type="radio" name="lwMethod" value="count">枚数を指定して均等</label>
+          <label class="chip"><input type="radio" name="lwMethod" value="auto">動きの変化で自動</label>
+          <label class="chip"><input type="radio" name="lwMethod" value="manual">手動</label>
+        </div>
+        <div class="field-row lw-param" id="lwParamEvery" hidden>
+          <label>何枚ごと <input type="number" id="lwEveryN" value="2" min="1"></label>
+        </div>
+        <div class="field-row lw-param" id="lwParamCount" hidden>
+          <label>抽出する枚数 <input type="number" id="lwCount" value="8" min="1"></label>
+        </div>
+        <div class="field-row lw-param" id="lwParamAuto" hidden>
+          <label>しきい値（大きいほど少なく） <input type="range" id="lwThresh" min="0.002" max="0.15" step="0.002" value="0.02"></label>
+          <span class="mono lw-note" id="lwThreshVal">0.020</span>
+          <label><input type="checkbox" id="lwIncludeLast" checked> 最後のコマも含める</label>
+          <span class="lw-note" id="lwAutoNote"></span>
+        </div>
+      </section>
+      <section class="modal-sec">
+        <h4>② 採用するコマ</h4>
+        <p>クリックで切り替え、Shift+クリックで範囲をまとめて切り替えます。</p>
+        <div class="lw-grid" id="lwGrid"></div>
+      </section>
+      <section class="modal-sec">
+        <h4>③ 再生の速さ（1コマを何ミリ秒表示するか）</h4>
+        <p>1000ms = 1秒です。数字が大きいほど1コマが長く表示され、ゆっくりした動きになります。</p>
+        <div class="lw-methods" role="radiogroup" aria-label="再生の速さ">
+          <label class="chip"><input type="radio" name="lwHold" value="source" checked>元の動画と同じ速さ</label>
+          <label class="chip"><input type="radio" name="lwHold" value="fixed">全コマを同じ長さにする</label>
+        </div>
+        <p class="lw-explain" id="lwHoldExplain"></p>
+        <details class="lw-param lw-adv" id="lwHoldSource">
+          <summary>最後のコマの長さ（通常は変更不要）</summary>
+          <div class="field-row">
+            <label>最後のコマ <input type="number" id="lyLastHold" value="" min="10" step="10" placeholder="自動"> ms</label>
+            <span class="lw-note">空欄なら、その直前のコマと同じ間隔になります。ループ再生の最後だけ長く止めたいときに使います。</span>
+          </div>
+        </details>
+        <div class="field-row lw-param" id="lwHoldFixed" hidden>
+          <label>1コマ <input type="number" id="lwFixedMs" value="100" min="1" step="10"> ms</label>
+          <label>＝ 1秒あたり <input type="number" id="lwFps" min="1" max="120" placeholder="fps"> コマ</label>
+        </div>
+        <div class="lw-foot">
+          <span class="lw-summary mono" id="lwSummary"></span>
+          <button class="btn btn-primary" id="lyCreate">追加する</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== 表示時間の一括設定 ======================== -->
+<div id="holdModal" class="modal-backdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="holdTitle">
+    <div class="modal-head">
+      <h3 id="holdTitle">表示時間を一括設定</h3>
+      <button class="icon-btn" data-close-modal title="閉じる" aria-label="閉じる">
+        <svg class="icon" viewBox="0 0 20 20"><path d="M5 5l10 10M15 5L5 15"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <section class="modal-sec">
+        <p>選択中の <b id="holdCount">0</b> コマの表示時間を同じ値にそろえます（元に戻せます）。</p>
+        <div class="field-row">
+          <label>1コマ <input type="number" id="holdMs" min="1" step="10"> ms</label>
+          <label>または <input type="number" id="holdFps" min="1" max="120" placeholder="fps"> fps</label>
+          <button class="btn btn-primary" id="holdApply">適用</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== 透過処理(API) ======================== -->
+<div id="matteModal" class="modal-backdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="matteTitle">
+    <div class="modal-head">
+      <h3 id="matteTitle">透過処理（背景除去API）</h3>
+      <button class="icon-btn" data-close-modal title="閉じる" aria-label="閉じる">
+        <svg class="icon" viewBox="0 0 20 20"><path d="M5 5l10 10M15 5L5 15"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <section class="modal-sec">
+        <h4>対象</h4>
+        <div class="lw-methods" role="radiogroup" aria-label="対象">
+          <label class="chip"><input type="radio" name="matteScope" value="one" checked>このコマ</label>
+          <label class="chip"><input type="radio" name="matteScope" value="selected">選択中のコマ（<span id="matteSelCount">0</span>）</label>
+          <label class="chip"><input type="radio" name="matteScope" value="layer">レイヤーの全コマ</label>
+        </div>
+        <h4>API</h4>
+        <div class="field-row"><select id="matteProvider" aria-label="API"></select></div>
+        <p class="lw-note" style="margin-top:8px;">外部の背景除去APIで透過し、結果は新しい画像としてコマに差し替えます（元画像は残ります）。API接続は準備中のため、現在は実行しても反映されません。</p>
+        <div class="field-row"><button class="btn btn-primary" id="matteRun">透過処理を実行</button></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script src="/js/composite.js?v=20260913b"></script>
+<script src="/js/api.js?v=20260913b"></script>
+<script src="/js/history.js?v=20260913b"></script>
+<script src="/js/state.js?v=20260913b"></script>
+<script src="/js/player.js?v=20260913b"></script>
+<script src="/js/canvasview.js?v=20260913b"></script>
+<script src="/js/timeline.js?v=20260913b"></script>
+<script src="/js/inspector.js?v=20260913b"></script>
+<script src="/js/cellmenu.js?v=20260913b"></script>
+<script src="/js/transformedit.js?v=20260913b"></script>
+<script src="/js/layerwizard.js?v=20260913b"></script>
+<script>
+(function () {
+  "use strict";
+
+  const $ = (id) => document.getElementById(id);
+  let selectedAssetId = null;
+
+  /* ---------------- toast ---------------- */
+  function toast(message, kind) {
+    const el = document.createElement("div");
+    el.className = "toast" + (kind === "ok" ? " ok" : "");
+    const text = document.createElement("div");
+    text.style.flex = "1";
+    text.textContent = message;
+    el.appendChild(text);
+    const close = document.createElement("button");
+    close.className = "icon-btn close";
+    close.setAttribute("aria-label", "閉じる");
+    close.innerHTML = '<svg class="icon" viewBox="0 0 20 20"><path d="M5 5l10 10M15 5L5 15"/></svg>';
+    close.addEventListener("click", () => el.remove());
+    el.appendChild(close);
+    $("toast").appendChild(el);
+    setTimeout(() => el.remove(), kind === "ok" ? 3200 : 9000);
+  }
+  function fail(e) {
+    console.error(e);
+    toast(String(e && e.message ? e.message : e));
+  }
+
+  /* ---------------- routing ---------------- */
+  function parseRoute() {
+    const h = location.hash.replace(/^#/, "");
+    const parts = h.split("/").filter(Boolean);
+    if (parts[0] === "make") return { view: "make" };
+    if (parts[0] === "edit") return { view: "edit", compId: parts[1] || null };
+    return { view: "home" };
+  }
+  function go(hash) { location.hash = hash; }
+
+  async function applyRoute() {
+    const r = parseRoute();
+    ["viewHome", "viewMake", "viewEdit"].forEach((id) => $(id).classList.remove("active"));
+    if (r.view === "make") {
+      $("viewMake").classList.add("active");
+      return;
+    }
+    if (r.view === "edit") {
+      $("viewEdit").classList.add("active");
+      try {
+        await State.refreshAssets();
+        if (r.compId && (!State.getComp() || State.getComp().id !== r.compId)) {
+          await State.loadComp(r.compId);
+          History.clear();
+        } else {
+          State.notify();
+        }
+        CanvasView.fit();
+      } catch (e) { fail(e); }
+      return;
+    }
+    $("viewHome").classList.add("active");
+    renderRecent();
+  }
+
+  /* ---------------- home ---------------- */
+  function renderRecent() {
+    const list = State.getRecentComps();
+    $("homeRecentWrap").hidden = list.length === 0;
+    const wrap = $("homeRecentList");
+    wrap.innerHTML = "";
+    for (const c of list) {
+      const btn = document.createElement("button");
+      btn.className = "recent-item";
+      const name = document.createElement("span");
+      name.className = "rn";
+      name.textContent = c.name || c.id;
+      const meta = document.createElement("span");
+      meta.className = "rm mono";
+      meta.textContent = new Date(c.at).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+      btn.append(name, meta);
+      btn.addEventListener("click", () => go("#/edit/" + c.id));
+      wrap.appendChild(btn);
+    }
+  }
+  $("homeMake").addEventListener("click", () => go("#/make"));
+  $("homeResume").addEventListener("click", () => {
+    const list = State.getRecentComps();
+    if (!list.length) { toast("この端末にはまだ保存された編集がありません。まず素材を取り込んでください。"); return; }
+    go("#/edit/" + list[0].id);
+  });
+  $("homeImport").addEventListener("click", () => { openModal("importModal"); });
+  $("makeBack").addEventListener("click", () => go("#/"));
+  $("makeToEdit").addEventListener("click", () => {
+    const list = State.getRecentComps();
+    go(list.length ? "#/edit/" + list[0].id : "#/edit");
+  });
+  $("editHome").addEventListener("click", () => go("#/"));
+
+  /* ---------------- modals ---------------- */
+  function openModal(id) { $(id).hidden = false; }
+  function closeModal(id) { $(id).hidden = true; }
+  document.querySelectorAll("[data-close-modal]").forEach((btn) => {
+    btn.addEventListener("click", () => { btn.closest(".modal-backdrop").hidden = true; });
+  });
+  document.querySelectorAll(".modal-backdrop").forEach((back) => {
+    back.addEventListener("click", (ev) => { if (ev.target === back) back.hidden = true; });
+  });
+  window.addEventListener("keydown", (ev) => {
+    if (ev.key !== "Escape") return;
+    const open = document.querySelectorAll(".modal-backdrop:not([hidden])");
+    if (!open.length) return;
+    open.forEach((m) => { m.hidden = true; });
+    // モーダルを閉じたEscで、選択解除や編集キャンセルまで走らせない
+    ev.stopImmediatePropagation();
+  });
+
+  /* ---------------- steps ---------------- */
+  function renderSteps() {
+    const comp = State.getComp();
+    const hasAssets = State.getAssets().length > 0;
+    const hasLayers = !!(comp && comp.layers.length);
+    const defs = [
+      { n: 1, label: "取込", done: hasAssets },
+      { n: 2, label: "レイヤー", done: hasLayers },
+      { n: 3, label: "タイムライン", done: false },
+      { n: 4, label: "透過・合成", todo: true },
+      { n: 5, label: "出力", todo: true },
+    ];
+    const activeIdx = defs.findIndex((d) => !d.done && !d.todo);
+    const bar = $("stepBar");
+    bar.innerHTML = "";
+    defs.forEach((d, i) => {
+      const pill = document.createElement("span");
+      pill.className = "step-pill" + (d.todo ? " todo" : d.done ? " done" : (i === activeIdx ? " active" : ""));
+      if (d.todo) pill.title = "計画のM2で実装予定";
+      const dot = document.createElement("span");
+      dot.className = "dot";
+      if (d.done) {
+        dot.innerHTML = '<svg class="icon" viewBox="0 0 20 20" style="width:9px;height:9px;stroke-width:3;"><path d="M4 10l4 4 8-8"/></svg>';
+      } else {
+        dot.textContent = d.n;
+      }
+      const lbl = document.createElement("span");
+      lbl.className = "lbl";
+      lbl.textContent = d.label;
+      pill.append(dot, lbl);
+      if (d.todo) {
+        const b = document.createElement("span");
+        b.className = "badge todo";
+        b.textContent = "予定";
+        pill.appendChild(b);
+      }
+      bar.appendChild(pill);
+    });
+  }
+
+  /* ---------------- panels ---------------- */
+  function togglePanel(side) {
+    const narrow = window.matchMedia("(max-width:1100px)").matches;
+    if (narrow) {
+      document.body.classList.toggle(side === "left" ? "show-left" : "show-right");
+    } else {
+      document.body.classList.toggle(side === "left" ? "left-collapsed" : "right-collapsed");
+    }
+    CanvasView.fit();
+  }
+  $("toggleLeft").addEventListener("click", () => togglePanel("left"));
+  $("toggleRight").addEventListener("click", () => togglePanel("right"));
+
+  /* ---------------- render ---------------- */
+  CanvasView.attach($("stage"), $("stageWrap"));
+  Timeline.attach($("timelinePanel"), {
+    onReorder: reorderExposure,
+    onSelect: (layerId, expId, mods) => {
+      if (TransformEdit.isActive()) return;
+      State.selectExposure(layerId, expId, mods);
+      seekToExposure(layerId, expId);   // 選んだコマをプレビューに出す
+    },
+    onCellMenu: openCellMenu,
+    onPaint: (layerId, ids, primaryId) => State.setSelection(layerId, ids, primaryId),
+    onSeek: (t) => { if (TransformEdit.isActive()) return; Player.pause(); Player.seek(t); },
+  });
+  Inspector.attach($("inspector"), {
+    onLayerPatch: patchLayer,
+    onExposurePatch: patchExposure,
+    onReplaceImage: replaceExposureImage,
+    onDeleteLayer: deleteLayer,
+    onStartEdit: (expId) => { const ly = State.getSelectedLayer(); if (ly) startEdit(ly.id, expId); },
+    onTransform: (patch) => TransformEdit.set(patch),
+    onTransformAction: (name) => {
+      if (name === "center") TransformEdit.center();
+      else if (name === "reset") TransformEdit.resetScale();
+      else if (name === "prev") TransformEdit.step(-1);
+      else if (name === "next") TransformEdit.step(1);
+      else if (name === "commit") TransformEdit.commit();
+      else if (name === "cancel") TransformEdit.cancel();
+    },
+  });
+  TransformEdit.attach($("stageWrap"), {
+    getComp: () => State.getComp(),
+    onChange: (st) => Inspector.renderTransform(st),
+    onStep: (layerId, expId) => { State.selectExposure(layerId, expId); seekToExposure(layerId, expId); },
+    onCommit: (layerId, next) => {
+      $("stageWrap").classList.remove("editing");
+      commitExposures(layerId, next, "transform").then((ok) => {
+        renderAll();
+        if (ok) toast("位置・倍率を反映しました（元に戻す: Ctrl+Z）", "ok");
+      });
+    },
+    onCancel: () => { $("stageWrap").classList.remove("editing"); renderAll(); },
+  });
+  Player.setTotalTicksFn(() => (State.getComp() ? State.getComp().total_ticks : 0));
+  History.init(renderAll);
+  State.onChange(renderAll);
+  Player.onTick((t) => {
+    const comp = State.getComp();
+    if (!comp) return;
+    CanvasView.render(comp, t);
+    Timeline.updatePlayhead(t);
+    updateTimeLabels(comp, t);
+  });
+
+  function updateTimeLabels(comp, t) {
+    $("timeLabel").textContent = Math.floor(t + 0.5).toLocaleString() + " / "
+      + comp.total_ticks.toLocaleString() + " ms";
+    const ly = State.getSelectedLayer();
+    const el = $("frameLabel");
+    el.hidden = !(ly && ly.exposures.length);
+    if (el.hidden) return;
+    const e = CanvasView.exposureAt(CanvasView.buildSpans(ly), t, ly.after_end);
+    const i = e ? ly.exposures.indexOf(e) : -1;
+    el.textContent = "コマ " + (i >= 0 ? i + 1 : "–") + " / " + ly.exposures.length;
+  }
+
+  function renderAll() {
+    const comp = State.getComp();
+    $("undoBtn").disabled = !History.canUndo();
+    $("redoBtn").disabled = !History.canRedo();
+    renderSteps();
+    renderAssets();
+    renderCompSelect();
+    renderModeBar();
+    if (!comp) {
+      if (TransformEdit.isActive()) TransformEdit.cancel();
+      $("layerList").innerHTML = "";
+      $("layerEmpty").hidden = false;
+      $("stageEmpty").hidden = false;
+      Inspector.render(null, null);
+      $("timelinePanel").innerHTML = "";
+      return;
+    }
+    renderLayers(comp);
+    const ly = State.getSelectedLayer();
+    const sel = State.getSelectedExposure();
+    const ids = State.getSelectedIds();
+    Timeline.render(comp, {
+      layerId: ly ? ly.id : null, ids: new Set(ids),
+      primaryId: sel ? sel.id : null, deleteMode: State.isDeleteMode(),
+    });
+    Timeline.updatePlayhead(Player.getTicks());
+    if (TransformEdit.isActive()) Inspector.renderTransform(TransformEdit.get());
+    else Inspector.render(ly, sel, { count: ids.length });
+    $("stageEmpty").hidden = comp.layers.length > 0;
+    updateTimeLabels(comp, Player.getTicks());
+    CanvasView.render(comp, Player.getTicks());
+  }
+
+  function renderModeBar() {
+    const on = State.isDeleteMode() && !!State.getComp();
+    $("delBar").hidden = !on;
+    $("tlHint").hidden = on;
+    if (!on) return;
+    const n = State.getSelectedIds().length;
+    $("delCount").textContent = n;
+    $("delConfirm").disabled = n === 0;
+  }
+  $("delConfirm").addEventListener("click", () => deleteSelection());
+  $("delCancel").addEventListener("click", () => State.setDeleteMode(false));
+
+  function renderCompSelect() {
+    const sel = $("compSelect");
+    const comp = State.getComp();
+    const recents = State.getRecentComps();
+    sel.innerHTML = "";
+    if (!recents.length && !comp) {
+      const o = document.createElement("option");
+      o.value = ""; o.textContent = "(Compositionなし)";
+      sel.appendChild(o);
+      return;
+    }
+    const seen = new Set();
+    if (comp) {
+      const o = document.createElement("option");
+      o.value = comp.id; o.textContent = comp.name;
+      o.selected = true;
+      sel.appendChild(o);
+      seen.add(comp.id);
+    }
+    for (const c of recents) {
+      if (seen.has(c.id)) continue;
+      const o = document.createElement("option");
+      o.value = c.id; o.textContent = c.name || c.id;
+      sel.appendChild(o);
+    }
+  }
+
+  function renderAssets() {
+    const assets = State.getAssets();
+    const wrap = $("assetList");
+    wrap.innerHTML = "";
+    $("assetEmpty").hidden = assets.length > 0;
+    for (const a of assets) {
+      const card = document.createElement("button");
+      card.className = "asset-card" + (a.id === selectedAssetId ? " selected" : "");
+      const thumb = document.createElement("div");
+      thumb.className = "asset-thumb";
+      if (a.thumb_url) {
+        const img = document.createElement("img");
+        img.src = a.thumb_url;
+        img.alt = "";
+        thumb.appendChild(img);
+      }
+      const meta = document.createElement("div");
+      meta.className = "asset-meta";
+      const kind = document.createElement("div");
+      kind.className = "asset-kind";
+      kind.textContent = a.kind + " · " + a.n_frames + "f";
+      const name = document.createElement("div");
+      name.className = "asset-name";
+      name.textContent = a.width + "×" + a.height;
+      meta.append(kind, name);
+      card.append(thumb, meta);
+      card.title = a.id;
+      card.addEventListener("click", () => { selectedAssetId = a.id; renderAll(); });
+      wrap.appendChild(card);
+    }
+  }
+
+  function renderLayers(comp) {
+    const wrap = $("layerList");
+    wrap.innerHTML = "";
+    const layers = comp.layers.slice().sort((a, b) => b.z - a.z);  // 上に描かれる順で表示
+    $("layerEmpty").hidden = layers.length > 0;
+    const selected = State.getSelectedLayer();
+    layers.forEach((ly, i) => {
+      const row = document.createElement("div");
+      row.className = "layer-row"
+        + (selected && ly.id === selected.id ? " selected" : "")
+        + (ly.visible ? "" : " is-hidden");
+
+      const eye = document.createElement("button");
+      eye.className = "icon-btn";
+      eye.title = ly.visible ? "非表示にする" : "表示する";
+      eye.setAttribute("aria-label", eye.title);
+      eye.innerHTML = ly.visible
+        ? '<svg class="icon eye" viewBox="0 0 20 20"><path d="M2 10s3-5 8-5 8 5 8 5-3 5-8 5-8-5-8-5z"/><circle cx="10" cy="10" r="2"/></svg>'
+        : '<svg class="icon eye" viewBox="0 0 20 20"><path d="M3 3l14 14"/><path d="M6.5 6.6C4.2 8 2 10 2 10s3 5 8 5c1.2 0 2.3-.3 3.3-.7M17 12.5c.7-1 1-1.5 1-1.5s-3-5-8-5"/></svg>';
+      eye.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        patchLayer(ly.id, { visible: !ly.visible });
+      });
+
+      const name = document.createElement("span");
+      name.className = "layer-name";
+      name.textContent = ly.name;
+
+      const badge = document.createElement("span");
+      badge.className = "badge " + (ly.blend === "add" ? "add" : "normal");
+      badge.textContent = ly.blend;
+
+      const up = document.createElement("button");
+      up.className = "icon-btn";
+      up.title = "前面へ";
+      up.setAttribute("aria-label", "前面へ");
+      up.innerHTML = '<svg class="icon" viewBox="0 0 20 20"><path d="M5 12l5-5 5 5"/></svg>';
+      up.disabled = i === 0;
+      up.addEventListener("click", (ev) => { ev.stopPropagation(); swapZ(ly, layers[i - 1]); });
+
+      const down = document.createElement("button");
+      down.className = "icon-btn";
+      down.title = "背面へ";
+      down.setAttribute("aria-label", "背面へ");
+      down.innerHTML = '<svg class="icon" viewBox="0 0 20 20"><path d="M5 8l5 5 5-5"/></svg>';
+      down.disabled = i === layers.length - 1;
+      down.addEventListener("click", (ev) => { ev.stopPropagation(); swapZ(ly, layers[i + 1]); });
+
+      row.append(eye, name, badge, up, down);
+      row.addEventListener("click", () => State.selectLayer(ly.id));
+      wrap.appendChild(row);
+    });
+  }
+
+  /* ---------------- composition ---------------- */
+  $("compSelect").addEventListener("change", (ev) => {
+    if (ev.target.value) go("#/edit/" + ev.target.value);
+  });
+  $("compNew").addEventListener("click", async () => {
+    try {
+      const comp = await Api.createComp({ name: "untitled", canvas_w: 256, canvas_h: 256, loop: true });
+      State.rememberComp(comp.id, comp.name);
+      go("#/edit/" + comp.id);
+      toast("新しいCompositionを作りました", "ok");
+    } catch (e) { fail(e); }
+  });
+
+  async function ensureComp(width, height) {
+    let comp = State.getComp();
+    if (comp) return comp;
+    comp = await Api.createComp({
+      name: "untitled",
+      canvas_w: width || 256, canvas_h: height || 256, loop: true,
+    });
+    await State.loadComp(comp.id);
+    if (location.hash !== "#/edit/" + comp.id) {
+      history.replaceState(null, "", "#/edit/" + comp.id);
+    }
+    // replaceState は hashchange を発火しないので、ビュー切り替えを明示的に走らせる
+    await applyRoute();
+    return State.getComp();
+  }
+
+  /* ---------------- import ---------------- */
+  $("assetAdd").addEventListener("click", () => openModal("importModal"));
+
+  async function afterImport(assetId) {
+    closeModal("importModal");
+    await State.refreshAssets();
+    selectedAssetId = assetId;
+    const asset = State.getAssets().find((a) => a.id === assetId);
+    await ensureComp(asset ? asset.width : 256, asset ? asset.height : 256);
+    renderAll();
+    toast("取り込みました。レイヤーパネルの ＋ でレイヤーに追加できます", "ok");
+  }
+
+  $("upBtn").addEventListener("click", async () => {
+    const f = $("upFile").files[0];
+    if (!f) { toast("ファイルを選んでください"); return; }
+    try {
+      const res = await Api.uploadAsset(f);
+      await afterImport(res.asset_id);
+    } catch (e) { fail(e); }
+  });
+
+  $("seqBtn").addEventListener("click", async () => {
+    const files = $("seqFiles").files;
+    const fps = Number($("seqFps").value);
+    if (!files.length) { toast("連番画像を選んでください"); return; }
+    if (!fps || fps <= 0) { toast("fpsを1以上で指定してください"); return; }
+    try {
+      const res = await Api.importAsset("sequence", { fps: fps }, { files: Array.from(files) });
+      await afterImport(res.asset_id);
+    } catch (e) { fail(e); }
+  });
+
+  $("shBtn").addEventListener("click", async () => {
+    const f = $("shFile").files[0];
+    if (!f) { toast("シート画像を選んでください"); return; }
+    const params = {
+      cell_w: Number($("shW").value), cell_h: Number($("shH").value),
+      margin: Number($("shMargin").value), spacing: Number($("shSpacing").value),
+      count: Number($("shCount").value),
+    };
+    try {
+      const res = await Api.importAsset("sheet", params, { file: f });
+      await afterImport(res.asset_id);
+    } catch (e) { fail(e); }
+  });
+
+  /* ---------------- layers ---------------- */
+  $("layerAdd").addEventListener("click", async () => {
+    if (!selectedAssetId) { toast("先に素材を選んでください"); return; }
+    const asset = State.getAssets().find((a) => a.id === selectedAssetId);
+    if (!asset) { toast("素材が見つかりません"); return; }
+    const comp = State.getComp();
+    $("lyName").value = "layer" + ((comp ? comp.layers.length : 0) + 1);
+    openModal("layerModal");
+    try { await LayerWizard.open(asset); } catch (e) { fail(e); }
+  });
+
+  $("lyCreate").addEventListener("click", async () => {
+    const asset = State.getAssets().find((a) => a.id === selectedAssetId);
+    if (!asset) { toast("素材が選ばれていません"); return; }
+    const kind = $("lyKind").value;
+    const extract = LayerWizard.getRequest();
+    if (!extract) { toast("採用するコマを1つ以上選んでください"); return; }
+    try {
+      const comp = await ensureComp(asset.width, asset.height);
+      const body = Object.assign({
+        name: $("lyName").value || "layer",
+        kind: kind,
+        blend: kind === "glow" ? "add" : "normal",
+        z: comp.layers.length,
+        asset_id: asset.id,
+      }, extract);
+      const layer = await Api.createLayer(comp.id, body);
+      closeModal("layerModal");
+      await State.refreshComp();
+      State.selectLayer(layer.id);
+      History.clear();   // レイヤー追加は元に戻す対象外（履歴の整合を保つため）
+      toast("レイヤー「" + layer.name + "」を追加しました（" + layer.exposures.length + "コマ）", "ok");
+    } catch (e) { fail(e); }
+  });
+
+  async function deleteLayer(layerId, layerName) {
+    if (!window.confirm("レイヤー「" + layerName + "」を削除します。元に戻せません。")) return;
+    try {
+      await Api.deleteLayer(layerId);
+      await State.refreshComp();
+      History.clear();
+      toast("レイヤーを削除しました", "ok");
+    } catch (e) { fail(e); }
+  }
+
+  async function swapZ(a, b) {
+    if (!a || !b) return;
+    const az = a.z, bz = b.z;
+    await History.run({
+      label: "swapZ",
+      do: async () => {
+        await Api.patchLayer(a.id, { z: bz });
+        await Api.patchLayer(b.id, { z: az });
+        await State.refreshComp();
+      },
+      undo: async () => {
+        await Api.patchLayer(a.id, { z: az });
+        await Api.patchLayer(b.id, { z: bz });
+        await State.refreshComp();
+      },
+    }).catch(fail);
+  }
+
+  async function patchLayer(layerId, patch) {
+    const before = State.getLayerById(layerId);
+    if (!before) return;
+    const beforeVals = {};
+    Object.keys(patch).forEach((k) => { beforeVals[k] = before[k]; });
+    await History.run({
+      label: "patchLayer",
+      do: async () => { await Api.patchLayer(layerId, patch); await State.refreshComp(); },
+      undo: async () => { await Api.patchLayer(layerId, beforeVals); await State.refreshComp(); },
+    }).catch(fail);
+  }
+
+  /* ---------------- exposures ---------------- */
+  function expShape(e) {
+    return {
+      id: e.id, asset_id: e.asset_id, frame_id: e.frame_id, hold_ticks: e.hold_ticks,
+      dx: e.dx, dy: e.dy, flip_x: e.flip_x, scale: e.scale || 1,
+      matte_mode: e.matte_mode, matte_json: e.matte_json,
+    };
+  }
+
+  /**
+   * レイヤーのコマ列を next に置き換える(PUT 1回・Undo 1回)。id の無い要素は新規コマ。
+   * 複製・削除・反転・往復・一括表示時間・編集モードの確定はすべてここを通る。
+   */
+  async function commitExposures(layerId, next, label) {
+    const ly = State.getLayerById(layerId);
+    if (!ly) return false;
+    const before = ly.exposures.map(expShape);
+    const after = next.map(expShape);
+    let ok = true;
+    await History.run({
+      label: label,
+      do: async () => { await Api.putExposures(layerId, after); await State.refreshComp(); },
+      undo: async () => { await Api.putExposures(layerId, before); await State.refreshComp(); },
+    }).catch((e) => { ok = false; fail(e); });
+    return ok;
+  }
+
+  function seekToExposure(layerId, expId) {
+    const ly = State.getLayerById(layerId);
+    if (!ly) return;
+    let t = ly.start_ticks;
+    for (const e of ly.exposures) {
+      if (e.id === expId) break;
+      t += e.hold_ticks;
+    }
+    Player.pause();
+    Player.seek(t);
+  }
+
+  /** 選択中コマ {ly, ids:Set, idxs:[昇順の位置]}。未選択なら null。 */
+  function selectionTargets() {
+    const ly = State.getSelectedLayer();
+    if (!ly) return null;
+    const ids = new Set(State.getSelectedIds());
+    const idxs = [];
+    ly.exposures.forEach((e, i) => { if (ids.has(e.id)) idxs.push(i); });
+    return idxs.length ? { ly: ly, ids: ids, idxs: idxs } : null;
+  }
+
+  function withoutId(e) { const c = Object.assign({}, e); delete c.id; return c; }
+
+  async function duplicateSelection() {
+    const s = selectionTargets();
+    if (!s) { toast("複製するコマを選んでください"); return; }
+    const list = s.ly.exposures.map(expShape);
+    const copies = s.idxs.map((i) => withoutId(list[i]));
+    const at = s.idxs[s.idxs.length - 1] + 1;
+    list.splice(at, 0, ...copies);
+    if (!(await commitExposures(s.ly.id, list, "duplicate"))) return;
+    const ly = State.getLayerById(s.ly.id);
+    const newIds = ly.exposures.slice(at, at + copies.length).map((e) => e.id);
+    State.setSelection(ly.id, newIds, newIds[0]);
+    seekToExposure(ly.id, newIds[0]);
+    toast(copies.length + "コマを複製しました", "ok");
+  }
+
+  async function deleteSelection() {
+    const s = selectionTargets();
+    if (!s) { toast("削除するコマを選んでください"); return; }
+    if (s.idxs.length >= s.ly.exposures.length) {
+      toast("レイヤーの全コマは削除できません。レイヤーごと消す場合は右パネルのレイヤー削除を使ってください");
+      return;
+    }
+    const list = s.ly.exposures.filter((e) => !s.ids.has(e.id)).map(expShape);
+    const keepIdx = Math.min(s.idxs[0], list.length - 1);
+    State.setDeleteMode(false);
+    if (!(await commitExposures(s.ly.id, list, "delete"))) return;
+    const ly = State.getLayerById(s.ly.id);
+    const id = ly.exposures[keepIdx].id;
+    State.setSelection(ly.id, [id], id);
+    seekToExposure(ly.id, id);
+    toast(s.idxs.length + "コマを削除しました（元に戻す: Ctrl+Z）", "ok");
+  }
+
+  async function reverseSelection() {
+    const s = selectionTargets();
+    if (!s || s.idxs.length < 2) { toast("反転するには2コマ以上選んでください"); return; }
+    const list = s.ly.exposures.map(expShape);
+    const picked = s.idxs.map((i) => list[i]).reverse();
+    s.idxs.forEach((i, k) => { list[i] = picked[k]; });
+    if (await commitExposures(s.ly.id, list, "reverse")) toast(s.idxs.length + "コマの順番を反転しました", "ok");
+  }
+
+  async function pingpongSelection() {
+    const s = selectionTargets();
+    if (!s || s.idxs.length < 3) { toast("往復にするには3コマ以上選んでください"); return; }
+    const list = s.ly.exposures.map(expShape);
+    const back = s.idxs.map((i) => list[i]).slice(1, -1).reverse().map(withoutId);
+    list.splice(s.idxs[s.idxs.length - 1] + 1, 0, ...back);
+    if (await commitExposures(s.ly.id, list, "pingpong")) toast("逆順の " + back.length + "コマを後ろに追加しました", "ok");
+  }
+
+  function enterDeleteMode(layerId, expId) {
+    if (!State.getSelectedIds().includes(expId)) State.selectExposure(layerId, expId);
+    State.setDeleteMode(true);
+  }
+
+  function startEdit(layerId, expId) {
+    CellMenu.close();
+    if (State.isDeleteMode()) State.setDeleteMode(false);
+    if (!State.getSelectedIds().includes(expId)) State.selectExposure(layerId, expId);
+    seekToExposure(layerId, expId);
+    if (!TransformEdit.start(layerId, expId, State.getSelectedIds())) return;
+    $("stageWrap").classList.add("editing");
+    document.body.classList.remove("right-collapsed");
+    if (window.matchMedia("(max-width:1100px)").matches) document.body.classList.add("show-right");
+    renderAll();
+  }
+
+  function openCellMenu(layerId, expId, x, y) {
+    if (TransformEdit.isActive() || State.isDeleteMode()) return;
+    const ly = State.getLayerById(layerId);
+    if (!ly) return;
+    if (!(State.getSelectedLayer() === ly && State.getSelectedIds().includes(expId))) {
+      State.selectExposure(layerId, expId);
+      seekToExposure(layerId, expId);
+    }
+    const n = State.getSelectedIds().length;
+    const pos = ly.exposures.findIndex((e) => e.id === expId) + 1;
+    CellMenu.open(x, y, [
+      { label: "複製", hint: "Ctrl+D", action: duplicateSelection },
+      { label: "削除…", hint: "Del", danger: true, action: () => enterDeleteMode(layerId, expId) },
+      { label: "編集（移動・拡大縮小）", action: () => startEdit(layerId, expId) },
+      { label: "透過処理…", action: openMatteModal },
+      { sep: true },
+      { label: "表示時間を一括設定…", action: openHoldModal },
+      { label: "順番を反転", disabled: n < 2, action: reverseSelection },
+      { label: "往復にする", disabled: n < 3, action: pingpongSelection },
+    ], n > 1 ? n + "コマ選択中" : "コマ " + pos + " / " + ly.exposures.length);
+  }
+
+  /* ---- 表示時間の一括設定 ---- */
+  function openHoldModal() {
+    const s = selectionTargets();
+    if (!s) { toast("コマを選んでください"); return; }
+    $("holdCount").textContent = s.idxs.length;
+    $("holdMs").value = s.ly.exposures[s.idxs[0]].hold_ticks;
+    $("holdFps").value = "";
+    openModal("holdModal");
+    $("holdMs").focus();
+  }
+  $("holdFps").addEventListener("input", () => {
+    const fps = Number($("holdFps").value);
+    if (fps > 0) $("holdMs").value = Math.floor(1000 / fps + 0.5);
+  });
+  $("holdMs").addEventListener("input", () => { $("holdFps").value = ""; });
+  $("holdApply").addEventListener("click", async () => {
+    const s = selectionTargets();
+    const ms = parseInt($("holdMs").value, 10);
+    if (!s) { closeModal("holdModal"); return; }
+    if (!(ms >= 1)) { toast("表示時間を1ms以上で指定してください"); return; }
+    const list = s.ly.exposures.map((e) => Object.assign(expShape(e), s.ids.has(e.id) ? { hold_ticks: ms } : {}));
+    closeModal("holdModal");
+    if (await commitExposures(s.ly.id, list, "hold")) toast(s.idxs.length + "コマを " + ms + "ms にそろえました", "ok");
+  });
+
+  /* ---- 透過処理(API受け口) ---- */
+  async function openMatteModal() {
+    const s = selectionTargets();
+    if (!s) { toast("コマを選んでください"); return; }
+    $("matteSelCount").textContent = s.idxs.length;
+    document.querySelector(`input[name="matteScope"][value="${s.idxs.length > 1 ? "selected" : "one"}"]`).checked = true;
+    const sel = $("matteProvider");
+    sel.innerHTML = "";
+    let providers = [];
+    try { providers = (await Api.matteProviders()).providers; } catch (e) { console.error(e); }
+    if (!providers.length) {
+      const o = document.createElement("option");
+      o.value = ""; o.textContent = "未設定（API は後日接続）";
+      sel.appendChild(o);
+    }
+    providers.forEach((p) => {
+      const o = document.createElement("option");
+      o.value = p; o.textContent = p;
+      sel.appendChild(o);
+    });
+    openModal("matteModal");
+  }
+  $("matteRun").addEventListener("click", async () => {
+    const comp = State.getComp();
+    const s = selectionTargets();
+    if (!comp || !s) { closeModal("matteModal"); return; }
+    const scope = document.querySelector('input[name="matteScope"]:checked').value;
+    const primary = State.getSelectedExposure();
+    const ids = scope === "layer" ? s.ly.exposures.map((e) => e.id)
+      : scope === "selected" ? [...s.ids] : [primary ? primary.id : [...s.ids][0]];
+    closeModal("matteModal");
+    try {
+      await Api.matte(comp.id, { exposure_ids: ids, provider: $("matteProvider").value || "auto", mode: "apply" });
+      await State.refreshComp();
+      toast(ids.length + "コマを透過処理しました", "ok");
+    } catch (e) {
+      if (e.status === 501) toast("透過APIは未接続です（受け口のみ実装済み。API接続後に反映されます）");
+      else fail(e);
+    }
+  });
+
+  async function patchExposure(expId, patch) {
+    const ly = State.getSelectedLayer();
+    if (!ly) return;
+    const before = ly.exposures.map(expShape);
+    try {
+      await Api.patchExposure(expId, patch);
+      await State.refreshComp();
+    } catch (e) { fail(e); return; }
+    const layerAfter = State.getLayerById(ly.id);
+    if (!layerAfter) return;
+    const after = layerAfter.exposures.map(expShape);
+    await History.run({
+      label: "patchExposure",
+      do: async () => { await Api.putExposures(ly.id, after); await State.refreshComp(); },
+      undo: async () => { await Api.putExposures(ly.id, before); await State.refreshComp(); },
+    }).catch(fail);
+  }
+
+  async function reorderExposure(layerId, fromIdx, toIdx) {
+    const ly = State.getLayerById(layerId);
+    if (!ly) return;
+    const after = ly.exposures.map(expShape);
+    const moved = after.splice(fromIdx, 1)[0];
+    after.splice(toIdx, 0, moved);
+    await commitExposures(layerId, after, "reorder");
+  }
+
+  async function replaceExposureImage(expId, file) {
+    try {
+      await Api.replaceExposure(expId, file);
+      await State.refreshComp();
+      toast("コマの画像を差し替えました（この操作は元に戻せません）", "ok");
+    } catch (e) { fail(e); }
+  }
+
+  /* ---------------- undo / redo / playback ---------------- */
+  $("undoBtn").addEventListener("click", () => { TransformEdit.cancel(); History.undo().catch(fail); });
+  $("redoBtn").addEventListener("click", () => { TransformEdit.cancel(); History.redo().catch(fail); });
+
+  /** 選択レイヤーのコマを delta だけ送る(±Infinity で先頭/末尾)。extend=Shift で範囲を伸ばす。 */
+  function stepFrame(delta, extend) {
+    const ly = State.getSelectedLayer();
+    if (!ly || !ly.exposures.length) return;
+    const n = ly.exposures.length;
+    let i = ly.exposures.indexOf(State.getSelectedExposure());
+    if (i < 0) {
+      const e = CanvasView.exposureAt(CanvasView.buildSpans(ly), Player.getTicks(), ly.after_end);
+      i = e ? ly.exposures.indexOf(e) : 0;
+    }
+    const j = delta === -Infinity ? 0 : delta === Infinity ? n - 1 : Math.min(n - 1, Math.max(0, i + delta));
+    const id = ly.exposures[j].id;
+    State.selectExposure(ly.id, id, { shift: extend });
+    seekToExposure(ly.id, id);
+  }
+
+  window.addEventListener("keydown", (ev) => {
+    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(ev.target.tagName);
+    const key = ev.key || "";
+    const lower = key.toLowerCase();
+    const ctrl = ev.ctrlKey || ev.metaKey;
+
+    if (CellMenu.isOpen()) {
+      if (key === "Escape") { ev.preventDefault(); CellMenu.close(); }
+      return;
+    }
+    if (document.querySelector(".modal-backdrop:not([hidden])")) return;
+
+    if (TransformEdit.isActive()) {
+      if (typing) return;
+      const step = ev.shiftKey ? 10 : 1;
+      const arrows = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
+      if (arrows[key]) { ev.preventDefault(); TransformEdit.nudge(arrows[key][0], arrows[key][1]); }
+      else if (key === "Enter") { ev.preventDefault(); TransformEdit.commit(); }
+      else if (key === "Escape") { ev.preventDefault(); TransformEdit.cancel(); }
+      else if (key === "," || key === ".") { ev.preventDefault(); TransformEdit.step(key === "," ? -1 : 1); }
+      else if (ev.code === "Space" || ctrl) ev.preventDefault();   // 編集中は再生・Undo等を止める
+      return;
+    }
+
+    if (ctrl && lower === "z" && !ev.shiftKey) {
+      ev.preventDefault(); History.undo().catch(fail); return;
+    }
+    if (ctrl && (lower === "y" || (ev.shiftKey && lower === "z"))) {
+      ev.preventDefault(); History.redo().catch(fail); return;
+    }
+    if (typing || parseRoute().view !== "edit" || !State.getComp()) return;
+
+    if (State.isDeleteMode()) {
+      if (key === "Delete" || key === "Backspace" || key === "Enter") { ev.preventDefault(); deleteSelection(); }
+      else if (key === "Escape") { ev.preventDefault(); State.setDeleteMode(false); }
+      return;
+    }
+
+    const ly = State.getSelectedLayer();
+    if (ev.code === "Space") { ev.preventDefault(); Player.toggle(); }
+    else if (key === ",") { ev.preventDefault(); stepFrame(-1, false); }
+    else if (key === ".") { ev.preventDefault(); stepFrame(1, false); }
+    else if (key === "ArrowLeft") { ev.preventDefault(); stepFrame(-1, ev.shiftKey); }
+    else if (key === "ArrowRight") { ev.preventDefault(); stepFrame(1, ev.shiftKey); }
+    else if (key === "Home") { ev.preventDefault(); stepFrame(-Infinity, ev.shiftKey); }
+    else if (key === "End") { ev.preventDefault(); stepFrame(Infinity, ev.shiftKey); }
+    else if ((key === "Delete" || key === "Backspace") && State.getSelectedIds().length) {
+      ev.preventDefault(); deleteSelection();
+    }
+    else if (ctrl && lower === "d") { ev.preventDefault(); duplicateSelection(); }
+    else if (ctrl && lower === "a" && ly) {
+      ev.preventDefault();
+      const cur = State.getSelectedExposure();
+      State.setSelection(ly.id, ly.exposures.map((e) => e.id), cur ? cur.id : null);
+    }
+    else if (key === "Escape" && ly && State.getSelectedIds().length) {
+      ev.preventDefault(); State.selectLayer(ly.id);
+    }
+  });
+  $("playBtn").addEventListener("click", () => { if (!TransformEdit.isActive()) Player.toggle(); });
+
+  // コマ送りボタン(編集モード中は編集を続けたまま前後のコマへ)
+  function stepAny(delta) {
+    if (TransformEdit.isActive()) TransformEdit.step(delta);
+    else stepFrame(delta, false);
+  }
+  $("prevFrameBtn").addEventListener("click", () => stepAny(-1));
+  $("nextFrameBtn").addEventListener("click", () => stepAny(1));
+
+  // プレビューの再生速度(表示だけ。この端末に記憶する)
+  const SPEED_KEY = "sss_preview_speed";
+  try {
+    const saved = localStorage.getItem(SPEED_KEY);
+    if (saved && [...$("speedSelect").options].some((o) => o.value === saved)) $("speedSelect").value = saved;
+  } catch (e) { /* 使えない環境では既定の ×1 */ }
+  Player.setRate(Number($("speedSelect").value));
+  $("speedSelect").addEventListener("change", (ev) => {
+    Player.setRate(Number(ev.target.value));
+    try { localStorage.setItem(SPEED_KEY, ev.target.value); } catch (e) { /* ignore */ }
+  });
+  $("bgSelect").addEventListener("change", (ev) => {
+    $("stageWrap").dataset.bg = ev.target.value;
+  });
+  $("zoomIn").addEventListener("click", () => Timeline.setScale(Timeline.getScale() * 1.6));
+  $("zoomOut").addEventListener("click", () => Timeline.setScale(Timeline.getScale() / 1.6));
+
+  /* ---------------- boot ---------------- */
+  window.addEventListener("hashchange", () => { applyRoute().catch(fail); });
+  window.addEventListener("resize", () => CanvasView.fit());
+  applyRoute().catch(fail);
+})();
+</script>
+</body>
+</html>

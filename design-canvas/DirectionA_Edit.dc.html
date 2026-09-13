@@ -1,0 +1,212 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg-0:oklch(0.15 0.006 250); --bg-1:oklch(0.19 0.007 250); --bg-2:oklch(0.235 0.008 250);
+    --bg-3:oklch(0.29 0.009 250); --border:oklch(0.32 0.008 250/0.7); --border-soft:oklch(0.32 0.008 250/0.35);
+    --text-0:oklch(0.94 0.004 250); --text-1:oklch(0.72 0.01 250); --text-2:oklch(0.52 0.012 250);
+    --accent:oklch(0.78 0.15 75); --accent-ink:oklch(0.18 0.03 75); --accent-2:oklch(0.72 0.14 200);
+    --danger:oklch(0.65 0.19 25); --success:oklch(0.75 0.16 145);
+    --r-sm:6px; --r-md:10px; --r-lg:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg-0);color:var(--text-0);font-family:'Manrope',system-ui,sans-serif;}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+  a{color:var(--accent);} a:hover{color:oklch(0.85 0.15 75);}
+  .app{display:grid;grid-template-rows:56px 1fr clamp(150px,20vh,220px);height:900px;width:1440px;overflow:hidden;}
+  header{grid-row:1;display:flex;align-items:center;gap:16px;padding:0 16px;background:var(--bg-1);border-bottom:1px solid var(--border);}
+  .brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;letter-spacing:-0.01em;flex-shrink:0;}
+  .brand-mark{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--accent),var(--accent-2));flex-shrink:0;}
+  .comp-select{display:flex;align-items:center;gap:6px;background:var(--bg-2);border:1px solid var(--border-soft);border-radius:var(--r-sm);padding:6px 10px;font-size:13px;color:var(--text-1);}
+  .steps{display:flex;align-items:center;gap:6px;margin-left:8px;}
+  .step-pill{display:flex;align-items:center;gap:5px;padding:4px 9px 4px 6px;border-radius:999px;font-size:11.5px;color:var(--text-2);background:transparent;}
+  .step-pill.done{color:var(--accent-2);} .step-pill.active{color:var(--accent-ink);background:var(--accent);font-weight:700;}
+  .step-dot{width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;border:1.5px solid currentColor;flex-shrink:0;}
+  .step-pill.active .step-dot{border-color:var(--accent-ink);}
+  .spacer{flex:1;}
+  .iconbtn{display:flex;align-items:center;gap:6px;background:var(--bg-2);border:1px solid var(--border-soft);color:var(--text-1);border-radius:var(--r-sm);padding:6px 10px;font-size:12.5px;font-weight:600;}
+  .iconbtn:disabled{opacity:0.35;}
+  .icon{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+  .save-dot{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-2);}
+  .save-dot .dot{width:6px;height:6px;border-radius:50%;background:var(--success);}
+
+  .mid{grid-row:2;display:grid;grid-template-columns:clamp(200px,17vw,270px) 1fr clamp(230px,19vw,300px);min-height:0;}
+  .panel{background:var(--bg-1);border-right:1px solid var(--border);display:flex;flex-direction:column;min-height:0;overflow-y:auto;}
+  .panel.right{border-right:none;border-left:1px solid var(--border);}
+  .sec-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 6px;position:sticky;top:0;background:var(--bg-1);}
+  .sec-title{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-2);}
+  .sec-add{width:20px;height:20px;border-radius:5px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;color:var(--text-1);}
+
+  .asset-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 14px;}
+  .asset-card{background:var(--bg-2);border:1px solid var(--border-soft);border-radius:var(--r-md);overflow:hidden;}
+  .asset-thumb{height:56px;background:linear-gradient(135deg,oklch(0.3 0.1 250),oklch(0.22 0.05 280));display:flex;align-items:center;justify-content:center;}
+  .asset-meta{padding:6px 7px;}
+  .asset-kind{font-size:9.5px;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;}
+  .asset-name{font-size:11px;font-weight:600;color:var(--text-0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  .layer-list{padding:0 8px 14px;display:flex;flex-direction:column;gap:4px;}
+  .layer-row{display:flex;align-items:center;gap:8px;padding:8px 8px;border-radius:var(--r-sm);}
+  .layer-row.selected{background:var(--bg-3);box-shadow:inset 2px 0 0 var(--accent);}
+  .grip{width:12px;height:16px;display:flex;flex-direction:column;justify-content:center;gap:2px;flex-shrink:0;opacity:0.5;}
+  .grip i{height:2px;background:var(--text-2);border-radius:1px;}
+  .layer-name{font-size:12.5px;font-weight:600;flex:1;}
+  .badge{font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:5px;text-transform:uppercase;letter-spacing:0.03em;}
+  .badge.normal{background:var(--bg-3);color:var(--text-1);}
+  .badge.add{background:oklch(0.3 0.09 200);color:var(--accent-2);}
+  .eye{width:16px;height:16px;color:var(--text-2);flex-shrink:0;}
+
+  form.mini{margin:0 12px 14px;background:var(--bg-2);border:1px solid var(--border-soft);border-radius:var(--r-md);padding:10px;}
+  .mini-label{font-size:10.5px;color:var(--text-2);margin-bottom:6px;}
+  .mini-row{display:flex;gap:6px;}
+  .mini-input{flex:1;background:var(--bg-1);border:1px solid var(--border-soft);border-radius:6px;padding:6px 8px;font-size:11.5px;color:var(--text-0);}
+  .mini-btn{background:var(--accent);color:var(--accent-ink);border:none;border-radius:6px;padding:6px 10px;font-size:11.5px;font-weight:700;white-space:nowrap;}
+
+  .stage-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;background:
+    repeating-conic-gradient(var(--bg-1) 0% 25%, var(--bg-0) 0% 50%) 0 0/22px 22px;}
+  .stage{width:340px;height:340px;border-radius:var(--r-md);box-shadow:0 0 0 1px var(--border),0 30px 60px -20px rgba(0,0,0,0.6);background:#0a0a0a;display:flex;align-items:center;justify-content:center;}
+  .stage-figure{width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 35% 30%,oklch(0.8 0.13 220),oklch(0.5 0.16 240));box-shadow:0 0 40px 6px oklch(0.7 0.15 200/0.35);}
+  .stage-toolbar{position:absolute;bottom:18px;display:flex;align-items:center;gap:10px;background:var(--bg-1);border:1px solid var(--border);border-radius:999px;padding:6px 14px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.6);}
+  .play-btn{width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;}
+  .stage-toolbar .icon{color:var(--text-1);}
+  .stage-toolbar .sep{width:1px;height:16px;background:var(--border);}
+  .stage-toolbar .val{font-size:11px;color:var(--text-1);}
+
+  .inspector{padding:12px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
+  .insp-block{background:var(--bg-2);border:1px solid var(--border-soft);border-radius:var(--r-md);padding:12px;}
+  .insp-block h4{margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-2);}
+  .field{display:flex;align-items:center;justify-content:space-between;margin:8px 0;gap:10px;}
+  .field label{font-size:12px;color:var(--text-1);}
+  .field .ctl{width:118px;}
+  .slider{width:100%;accent-color:var(--accent);}
+  .select,.numbox{width:100%;background:var(--bg-1);border:1px solid var(--border-soft);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--text-0);}
+  .toggle{width:34px;height:19px;border-radius:999px;background:var(--bg-1);border:1px solid var(--border-soft);position:relative;flex-shrink:0;}
+  .toggle.on{background:var(--accent);}
+  .toggle::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:var(--text-0);}
+  .toggle.on::after{left:17px;background:var(--accent-ink);}
+  .drop{margin-top:8px;border:1.5px dashed var(--border);border-radius:var(--r-sm);padding:12px;text-align:center;font-size:11px;color:var(--text-2);}
+
+  .timeline{grid-row:3;background:var(--bg-1);border-top:1px solid var(--border);display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+  .tl-head{display:flex;align-items:center;gap:10px;padding:7px 14px;border-bottom:1px solid var(--border-soft);font-size:11px;color:var(--text-2);}
+  .tl-body{flex:1;overflow:auto;padding:8px 14px;}
+  .tl-row{display:flex;align-items:center;gap:10px;height:52px;}
+  .tl-label{width:90px;flex-shrink:0;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;}
+  .tl-strip{display:flex;gap:3px;position:relative;}
+  .tl-cell{height:44px;border-radius:6px;border:1.5px solid var(--border-soft);background:linear-gradient(160deg,oklch(0.3 0.1 250),oklch(0.22 0.05 280));flex-shrink:0;position:relative;}
+  .tl-cell.selected{border-color:var(--accent);box-shadow:0 0 0 2px oklch(0.78 0.15 75/0.3);}
+  .tl-cell .dur{position:absolute;bottom:2px;right:4px;font-size:8px;color:oklch(0.95 0 0/0.8);text-shadow:0 1px 2px rgba(0,0,0,0.8);}
+  .playhead{position:absolute;top:-4px;bottom:0;width:2px;background:var(--accent);}
+</style>
+</helmet>
+
+<div class="app">
+  <header>
+    <div class="brand"><div class="brand-mark"></div>SpriteSheet Studio</div>
+    <div class="comp-select">
+      <svg class="icon" viewBox="0 0 20 20"><path d="M4 6h12M4 10h12M4 14h8"/></svg>
+      walk_cycle_v3
+      <svg class="icon" viewBox="0 0 20 20"><path d="M6 8l4 4 4-4"/></svg>
+    </div>
+    <div class="steps">
+      <div class="step-pill done"><span class="step-dot"><svg class="icon" viewBox="0 0 20 20" style="width:9px;height:9px;stroke-width:3;"><path d="M4 10l4 4 8-8"/></svg></span>取込</div>
+      <div class="step-pill done"><span class="step-dot"><svg class="icon" viewBox="0 0 20 20" style="width:9px;height:9px;stroke-width:3;"><path d="M4 10l4 4 8-8"/></svg></span>レイヤー</div>
+      <div class="step-pill active"><span class="step-dot">3</span>タイムライン</div>
+      <div class="step-pill"><span class="step-dot">4</span>透過/合成</div>
+      <div class="step-pill"><span class="step-dot">5</span>出力</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="save-dot"><span class="dot"></span>自動保存済み</div>
+    <button class="iconbtn"><svg class="icon" viewBox="0 0 20 20"><path d="M8 5L3 10l5 5M3 10h9a4 4 0 0 1 0 8h-1"/></svg>Undo</button>
+    <button class="iconbtn" disabled><svg class="icon" viewBox="0 0 20 20"><path d="M12 5l5 5-5 5M17 10H8a4 4 0 0 0 0 8h1"/></svg>Redo</button>
+  </header>
+
+  <div class="mid">
+    <div class="panel">
+      <div class="sec-head"><span class="sec-title">Assets</span><div class="sec-add">+</div></div>
+      <div class="asset-grid">
+        <div class="asset-card"><div class="asset-thumb"></div><div class="asset-meta"><div class="asset-kind">video · 8f</div><div class="asset-name">walk_src.mp4</div></div></div>
+        <div class="asset-card"><div class="asset-thumb" style="background:linear-gradient(135deg,oklch(0.35 0.12 60),oklch(0.25 0.08 40));"></div><div class="asset-meta"><div class="asset-kind">sequence · 8f</div><div class="asset-name">glow_fx</div></div></div>
+      </div>
+      <div class="sec-head"><span class="sec-title">Layers</span><div class="sec-add">+</div></div>
+      <div class="layer-list">
+        <div class="layer-row selected"><div class="grip"><i></i><i></i><i></i></div><svg class="icon eye" viewBox="0 0 20 20"><path d="M2 10s3-5 8-5 8 5 8 5-3 5-8 5-8-5-8-5z"/><circle cx="10" cy="10" r="2"/></svg><span class="layer-name">char</span><span class="badge normal">normal</span></div>
+        <div class="layer-row"><div class="grip"><i></i><i></i><i></i></div><svg class="icon eye" viewBox="0 0 20 20"><path d="M2 10s3-5 8-5 8 5 8 5-3 5-8 5-8-5-8-5z"/><circle cx="10" cy="10" r="2"/></svg><span class="layer-name">fx_glow</span><span class="badge add">add</span></div>
+      </div>
+      <form class="mini">
+        <div class="mini-label">連番画像を取り込み (fps指定)</div>
+        <div class="mini-row"><input class="mini-input" placeholder="ファイルを選択" readonly><button class="mini-btn" type="button">取込</button></div>
+      </form>
+    </div>
+
+    <div class="stage-wrap">
+      <div class="stage"><div class="stage-figure"></div></div>
+      <div class="stage-toolbar">
+        <div class="play-btn"><svg class="icon" viewBox="0 0 20 20" style="stroke:none;fill:currentColor;"><path d="M7 5l8 5-8 5z"/></svg></div>
+        <svg class="icon" viewBox="0 0 20 20"><path d="M4 4v12M16 4l-9 6 9 6z"/></svg>
+        <div class="sep"></div>
+        <span class="val mono">2,340 / 4,000 ms</span>
+        <div class="sep"></div>
+        <svg class="icon" viewBox="0 0 20 20"><rect x="4" y="4" width="12" height="12" rx="2"/></svg>
+      </div>
+    </div>
+
+    <div class="panel right">
+      <div class="inspector">
+        <div class="insp-block">
+          <h4>Layer — char</h4>
+          <div class="field"><label>Opacity</label><input class="slider ctl" type="range"></div>
+          <div class="field"><label>Blend</label><select class="select ctl"><option>normal</option><option>add</option></select></div>
+          <div class="field"><label>After end</label><select class="select ctl"><option>hold</option><option>loop</option><option>hide</option></select></div>
+          <div class="field"><label>Visible</label><div class="toggle on ctl" style="width:34px;"></div></div>
+        </div>
+        <div class="insp-block">
+          <h4>Exposure — frame 3</h4>
+          <div class="field"><label>Hold (ms)</label><input class="numbox ctl mono" value="125"></div>
+          <div class="field"><label>dx / dy</label><div class="ctl" style="display:flex;gap:4px;"><input class="numbox mono" value="0" style="width:50%;"><input class="numbox mono" value="0" style="width:50%;"></div></div>
+          <div class="field"><label>Flip X</label><div class="toggle ctl" style="width:34px;"></div></div>
+          <div class="field"><label>Matte mode</label><select class="select ctl"><option>inherit</option><option>skip</option></select></div>
+          <div class="drop">画像をドラッグして差し替え</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="timeline">
+    <div class="tl-head"><svg class="icon" viewBox="0 0 20 20"><path d="M4 4v12M8 4v12M12 4v12M16 4v12"/></svg>タイムライン — 合計 4,000ms</div>
+    <div class="tl-body">
+      <div class="tl-row">
+        <div class="tl-label">char</div>
+        <div class="tl-strip">
+          <div class="playhead" style="left:210px;"></div>
+          <div class="tl-cell" style="width:50px;"><span class="dur mono">125</span></div>
+          <div class="tl-cell" style="width:50px;"><span class="dur mono">125</span></div>
+          <div class="tl-cell selected" style="width:50px;"><span class="dur mono">125</span></div>
+          <div class="tl-cell" style="width:120px;"><span class="dur mono">999</span></div>
+          <div class="tl-cell" style="width:50px;"><span class="dur mono">125</span></div>
+          <div class="tl-cell" style="width:50px;"><span class="dur mono">125</span></div>
+          <div class="tl-cell" style="width:50px;"><span class="dur mono">125</span></div>
+          <div class="tl-cell" style="width:50px;"><span class="dur mono">125</span></div>
+        </div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-label">fx_glow</div>
+        <div class="tl-strip">
+          <div class="tl-cell" style="width:60px;background:linear-gradient(160deg,oklch(0.35 0.12 60),oklch(0.25 0.08 40));"><span class="dur mono">250</span></div>
+          <div class="tl-cell" style="width:60px;background:linear-gradient(160deg,oklch(0.35 0.12 60),oklch(0.25 0.08 40));"><span class="dur mono">250</span></div>
+          <div class="tl-cell" style="width:60px;background:linear-gradient(160deg,oklch(0.35 0.12 60),oklch(0.25 0.08 40));"><span class="dur mono">250</span></div>
+          <div class="tl-cell" style="width:60px;background:linear-gradient(160deg,oklch(0.35 0.12 60),oklch(0.25 0.08 40));"><span class="dur mono">250</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

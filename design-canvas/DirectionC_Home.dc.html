@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg-0:oklch(0.13 0.005 250); --bg-1:oklch(0.17 0.006 250); --bg-2:oklch(0.215 0.007 250);
+    --border:oklch(0.30 0.008 250/0.7); --border-soft:oklch(0.30 0.008 250/0.35);
+    --text-0:oklch(0.94 0.004 250); --text-1:oklch(0.70 0.01 250); --text-2:oklch(0.50 0.012 250);
+    --accent:oklch(0.78 0.15 75); --accent-ink:oklch(0.18 0.03 75); --accent-2:oklch(0.72 0.14 200);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg-0);color:var(--text-0);font-family:'Manrope',system-ui,sans-serif;}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+  .icon{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+  .app{width:1280px;height:800px;display:grid;grid-template-columns:1fr 1px 380px;}
+  .left{display:flex;flex-direction:column;justify-content:center;padding:0 70px;gap:30px;}
+  .brand{display:flex;align-items:center;gap:11px;}
+  .brand-mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent-2));}
+  .brand h1{margin:0;font-size:20px;font-weight:800;}
+  .rows{display:flex;flex-direction:column;gap:2px;}
+  .row{display:flex;align-items:center;gap:14px;padding:16px 14px;border-radius:8px;}
+  .row:hover{background:var(--bg-1);}
+  .row.lead{background:var(--bg-1);box-shadow:inset 3px 0 0 var(--accent);}
+  .row-icon{width:38px;height:38px;border-radius:9px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;color:var(--text-1);flex-shrink:0;}
+  .row.lead .row-icon{color:var(--accent);}
+  .row-text h4{margin:0 0 2px;font-size:13.5px;font-weight:700;}
+  .row-text p{margin:0;font-size:11.5px;color:var(--text-2);}
+  .chev{margin-left:auto;color:var(--text-2);}
+  .divider{background:var(--border-soft);}
+  .right{background:var(--bg-1);display:flex;flex-direction:column;padding:36px 28px;gap:14px;}
+  .right h4{margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-2);}
+  .recent{display:flex;flex-direction:column;gap:8px;}
+  .rc{display:flex;align-items:center;gap:10px;background:var(--bg-2);border:1px solid var(--border-soft);border-radius:8px;padding:9px 10px;}
+  .rc-thumb{width:34px;height:34px;border-radius:6px;background:linear-gradient(135deg,oklch(0.35 0.12 220),oklch(0.22 0.06 240));flex-shrink:0;}
+  .rc-name{font-size:12px;font-weight:600;}
+  .rc-meta{font-size:10px;color:var(--text-2);}
+</style>
+</helmet>
+<div class="app">
+  <div class="left">
+    <div class="brand"><div class="brand-mark"></div><h1>SpriteSheet Studio</h1></div>
+    <div class="rows">
+      <div class="row lead">
+        <div class="row-icon"><svg class="icon" viewBox="0 0 20 20"><path d="M10 2v16M3 7l7-5 7 5M3 15l7 5 7-5"/></svg></div>
+        <div class="row-text"><h4>素材をつくる</h4><p>AIでFirst Frame・モーションを生成</p></div>
+        <svg class="icon chev" viewBox="0 0 20 20"><path d="M8 5l5 5-5 5"/></svg>
+      </div>
+      <div class="row">
+        <div class="row-icon"><svg class="icon" viewBox="0 0 20 20"><path d="M10 3v9M7 9l3 3 3-3M4 16h12"/></svg></div>
+        <div class="row-text"><h4>取り込んで編集する</h4><p>動画・連番・シート画像から</p></div>
+        <svg class="icon chev" viewBox="0 0 20 20"><path d="M8 5l5 5-5 5"/></svg>
+      </div>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div class="right">
+    <h4>最近使った編集</h4>
+    <div class="recent">
+      <div class="rc"><div class="rc-thumb"></div><div><div class="rc-name">walk_cycle_v3</div><div class="rc-meta mono">2分前・8フレーム</div></div></div>
+      <div class="rc"><div class="rc-thumb" style="background:linear-gradient(135deg,oklch(0.4 0.13 60),oklch(0.28 0.09 40));"></div><div><div class="rc-name">attack_combo</div><div class="rc-meta mono">昨日・12フレーム</div></div></div>
+      <div class="rc"><div class="rc-thumb" style="background:linear-gradient(135deg,oklch(0.35 0.1 140),oklch(0.22 0.06 150));"></div><div><div class="rc-name">idle_breathe</div><div class="rc-meta mono">3日前・6フレーム</div></div></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

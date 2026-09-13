@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg-0:oklch(0.15 0.006 250); --bg-1:oklch(0.19 0.007 250); --bg-2:oklch(0.235 0.008 250);
+    --border:oklch(0.32 0.008 250/0.7); --border-soft:oklch(0.32 0.008 250/0.35);
+    --text-0:oklch(0.94 0.004 250); --text-1:oklch(0.72 0.01 250); --text-2:oklch(0.52 0.012 250);
+    --accent:oklch(0.78 0.15 75); --accent-ink:oklch(0.18 0.03 75); --accent-2:oklch(0.72 0.14 200);
+    --r-md:12px; --r-lg:16px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg-0);color:var(--text-0);font-family:'Manrope',system-ui,sans-serif;}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+  .icon{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+  .app{width:1280px;height:800px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px;}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));}
+  .brand h1{margin:0;font-size:22px;font-weight:800;}
+  .paths{display:flex;gap:20px;}
+  .path{width:310px;background:var(--bg-1);border:1px solid var(--border-soft);border-radius:var(--r-lg);padding:24px;display:flex;flex-direction:column;gap:16px;}
+  .path.lead{border-color:oklch(0.5 0.1 75/0.5);}
+  .path h3{margin:0;font-size:15.5px;font-weight:700;}
+  .path p{margin:0;font-size:12px;color:var(--text-1);line-height:1.55;}
+  .mini-steps{display:flex;align-items:center;gap:4px;}
+  .mstep{width:22px;height:22px;border-radius:50%;background:var(--bg-2);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:var(--text-2);flex-shrink:0;}
+  .path.lead .mstep{border-color:var(--accent);color:var(--accent);}
+  .mline{flex:1;height:1.5px;background:var(--border);}
+  .go{margin-top:auto;display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--text-0);}
+  .path.lead .go{color:var(--accent);}
+  .foot{font-size:11px;color:var(--text-2);}
+</style>
+</helmet>
+<div class="app">
+  <div class="brand"><div class="brand-mark"></div><h1>SpriteSheet Studio</h1></div>
+  <div class="paths">
+    <div class="path lead">
+      <h3>① 素材をつくる</h3>
+      <p>AIでFirst Frameとモーションを生成してから編集へ進む、5ステップの流れ。</p>
+      <div class="mini-steps">
+        <div class="mstep">1</div><div class="mline"></div><div class="mstep">2</div><div class="mline"></div>
+        <div class="mstep">3</div><div class="mline"></div><div class="mstep">4</div><div class="mline"></div><div class="mstep">5</div>
+      </div>
+      <div class="go">この流れではじめる →</div>
+    </div>
+    <div class="path">
+      <h3>② 取り込んで編集する</h3>
+      <p>手持ちの素材から直接、コマ編集のステップに入る。</p>
+      <div class="mini-steps"><div class="mstep">1</div><div class="mline"></div><div class="mstep">2</div><div class="mline"></div><div class="mstep">3</div></div>
+      <div class="go">素材を選ぶ →</div>
+    </div>
+    <div class="path">
+      <h3>保存した編集を再開</h3>
+      <p>前回どのステップまで進んでいたかを覚えています。</p>
+      <div class="mini-steps"><div class="mstep">3</div></div>
+      <div class="go">続きから →</div>
+    </div>
+  </div>
+  <div class="foot mono">どちらを選んでも、②のステップからは同じ画面で編集します</div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg-0:oklch(0.15 0.006 250); --bg-1:oklch(0.19 0.007 250); --bg-2:oklch(0.235 0.008 250);
+    --bg-3:oklch(0.29 0.009 250); --border:oklch(0.32 0.008 250/0.7); --border-soft:oklch(0.32 0.008 250/0.35);
+    --text-0:oklch(0.94 0.004 250); --text-1:oklch(0.72 0.01 250); --text-2:oklch(0.52 0.012 250);
+    --accent:oklch(0.78 0.15 75); --accent-ink:oklch(0.18 0.03 75); --accent-2:oklch(0.72 0.14 200);
+    --danger:oklch(0.65 0.19 25); --success:oklch(0.75 0.16 145);
+    --r-sm:6px; --r-md:10px; --r-lg:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg-0);color:var(--text-0);font-family:'Manrope',system-ui,sans-serif;}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+  a{color:var(--accent);} a:hover{color:oklch(0.85 0.15 75);}
+  .icon{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+
+  .app{width:1440px;height:900px;display:grid;grid-template-rows:52px auto 1fr;overflow:hidden;}
+  header{display:flex;align-items:center;gap:14px;padding:0 18px;background:var(--bg-1);border-bottom:1px solid var(--border);}
+  .brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14.5px;flex-shrink:0;}
+  .brand-mark{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,var(--accent),var(--accent-2));}
+  .comp-name{font-size:12.5px;color:var(--text-1);background:var(--bg-2);border:1px solid var(--border-soft);border-radius:var(--r-sm);padding:5px 10px;}
+  .spacer{flex:1;}
+  .save-dot{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-2);}
+  .save-dot .dot{width:6px;height:6px;border-radius:50%;background:var(--success);}
+  .iconbtn{display:flex;align-items:center;gap:6px;background:var(--bg-2);border:1px solid var(--border-soft);color:var(--text-1);border-radius:var(--r-sm);padding:6px 10px;font-size:12px;font-weight:600;}
+  .iconbtn:disabled{opacity:0.35;}
+
+  .stepper{display:flex;align-items:center;justify-content:center;gap:0;padding:18px 40px 16px;background:var(--bg-0);border-bottom:1px solid var(--border-soft);}
+  .step{display:flex;flex-direction:column;align-items:center;gap:7px;width:170px;position:relative;}
+  .step-circle{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;border:2px solid var(--border);color:var(--text-2);background:var(--bg-1);}
+  .step.done .step-circle{border-color:var(--accent-2);color:var(--accent-2);background:oklch(0.25 0.05 200);}
+  .step.active .step-circle{border-color:var(--accent);color:var(--accent-ink);background:var(--accent);width:40px;height:40px;font-size:15px;box-shadow:0 0 0 5px oklch(0.78 0.15 75/0.15);}
+  .step-label{font-size:12px;font-weight:700;color:var(--text-2);}
+  .step.done .step-label{color:var(--accent-2);} .step.active .step-label{color:var(--text-0);}
+  .step-sub{font-size:10px;color:var(--text-2);}
+  .step-line{position:absolute;top:17px;left:50%;width:100%;height:2px;background:var(--border);z-index:-1;}
+  .step.done .step-line{background:var(--accent-2);}
+  .step.active .step-circle{margin-top:-3px;}
+
+  .work{display:grid;grid-template-columns:56px 1fr 260px;min-height:0;}
+  .rail{background:var(--bg-1);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 0;}
+  .rail-btn{width:38px;height:38px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:var(--text-2);}
+  .rail-btn.active{background:var(--bg-3);color:var(--accent);}
+
+  .center{display:flex;flex-direction:column;min-height:0;}
+  .stage-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:
+    repeating-conic-gradient(var(--bg-1) 0% 25%, var(--bg-0) 0% 50%) 0 0/22px 22px;min-height:0;}
+  .stage{width:270px;height:270px;border-radius:var(--r-md);box-shadow:0 0 0 1px var(--border),0 30px 60px -20px rgba(0,0,0,0.6);background:#0a0a0a;display:flex;align-items:center;justify-content:center;}
+  .stage-figure{width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 35% 30%,oklch(0.8 0.13 220),oklch(0.5 0.16 240));box-shadow:0 0 34px 6px oklch(0.7 0.15 200/0.35);}
+  .stage-toolbar{display:flex;align-items:center;gap:10px;background:var(--bg-1);border:1px solid var(--border);border-radius:999px;padding:7px 16px;}
+  .play-btn{width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;}
+  .stage-toolbar .icon{color:var(--text-1);}
+  .stage-toolbar .sep{width:1px;height:16px;background:var(--border);}
+  .stage-toolbar .val{font-size:11.5px;color:var(--text-1);}
+
+  .timeline{height:230px;background:var(--bg-1);border-top:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+  .tl-head{display:flex;align-items:center;gap:8px;padding:8px 18px;border-bottom:1px solid var(--border-soft);font-size:12px;font-weight:700;color:var(--text-0);}
+  .tl-head .hint{font-weight:500;color:var(--text-2);font-size:11px;}
+  .tl-body{flex:1;overflow:auto;padding:12px 18px;}
+  .tl-row{display:flex;align-items:center;gap:12px;height:68px;}
+  .tl-label{width:80px;flex-shrink:0;font-size:12.5px;font-weight:700;}
+  .tl-strip{display:flex;gap:4px;position:relative;}
+  .tl-cell{height:58px;border-radius:7px;border:2px solid var(--border-soft);background:linear-gradient(160deg,oklch(0.3 0.1 250),oklch(0.22 0.05 280));flex-shrink:0;position:relative;}
+  .tl-cell.selected{border-color:var(--accent);box-shadow:0 0 0 3px oklch(0.78 0.15 75/0.28);}
+  .tl-cell .dur{position:absolute;bottom:3px;right:5px;font-size:9.5px;color:oklch(0.95 0 0/0.85);text-shadow:0 1px 2px rgba(0,0,0,0.8);}
+  .tl-cell .drag{position:absolute;top:3px;left:5px;opacity:0.55;}
+  .playhead{position:absolute;top:-6px;bottom:0;width:2px;background:var(--accent);}
+
+  .side{background:var(--bg-1);border-left:1px solid var(--border);padding:16px;overflow-y:auto;}
+  .tip-card{background:linear-gradient(160deg,oklch(0.25 0.05 75),oklch(0.21 0.03 60));border:1px solid oklch(0.5 0.1 75/0.4);border-radius:var(--r-md);padding:13px;margin-bottom:16px;}
+  .tip-card .tip-title{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:var(--accent);margin-bottom:6px;}
+  .tip-card p{margin:0;font-size:12px;color:var(--text-1);line-height:1.55;}
+  .insp-block{background:var(--bg-2);border:1px solid var(--border-soft);border-radius:var(--r-md);padding:12px;margin-bottom:12px;}
+  .insp-block h4{margin:0 0 10px;font-size:10.5px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-2);}
+  .field{display:flex;align-items:center;justify-content:space-between;margin:8px 0;gap:8px;}
+  .field label{font-size:12px;color:var(--text-1);}
+  .field .ctl{width:96px;}
+  .numbox{width:100%;background:var(--bg-1);border:1px solid var(--border-soft);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--text-0);}
+  .next-btn{width:100%;margin-top:6px;background:var(--accent);color:var(--accent-ink);border:none;border-radius:var(--r-sm);padding:10px;font-weight:800;font-size:13px;}
+</style>
+</helmet>
+
+<div class="app">
+  <header>
+    <div class="brand"><div class="brand-mark"></div>SpriteSheet Studio</div>
+    <div class="comp-name">walk_cycle_v3</div>
+    <div class="spacer"></div>
+    <div class="save-dot"><span class="dot"></span>自動保存済み</div>
+    <button class="iconbtn"><svg class="icon" viewBox="0 0 20 20"><path d="M8 5L3 10l5 5M3 10h9a4 4 0 0 1 0 8h-1"/></svg>Undo</button>
+    <button class="iconbtn" disabled><svg class="icon" viewBox="0 0 20 20"><path d="M12 5l5 5-5 5M17 10H8a4 4 0 0 0 0 8h1"/></svg>Redo</button>
+  </header>
+
+  <div class="stepper">
+    <div class="step done"><div class="step-line"></div><div class="step-circle"><svg class="icon" viewBox="0 0 20 20" style="width:14px;height:14px;stroke-width:2.5;"><path d="M4 10l4 4 8-8"/></svg></div><div class="step-label">取込</div></div>
+    <div class="step done"><div class="step-line"></div><div class="step-circle"><svg class="icon" viewBox="0 0 20 20" style="width:14px;height:14px;stroke-width:2.5;"><path d="M4 10l4 4 8-8"/></svg></div><div class="step-label">レイヤー</div></div>
+    <div class="step active"><div class="step-line"></div><div class="step-circle">3</div><div class="step-label">タイムライン</div><div class="step-sub">コマ編集中</div></div>
+    <div class="step"><div class="step-line"></div><div class="step-circle">4</div><div class="step-label">透過・合成</div></div>
+    <div class="step"><div class="step-circle">5</div><div class="step-label">出力</div></div>
+  </div>
+
+  <div class="work">
+    <div class="rail">
+      <div class="rail-btn" title="Assets"><svg class="icon" viewBox="0 0 20 20"><rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5"/></svg></div>
+      <div class="rail-btn active" title="Layers"><svg class="icon" viewBox="0 0 20 20"><path d="M10 3l7 4-7 4-7-4z"/><path d="M3 11l7 4 7-4"/></svg></div>
+    </div>
+
+    <div class="center">
+      <div class="stage-wrap">
+        <div class="stage"><div class="stage-figure"></div></div>
+        <div class="stage-toolbar">
+          <div class="play-btn"><svg class="icon" viewBox="0 0 20 20" style="stroke:none;fill:currentColor;"><path d="M7 5l8 5-8 5z"/></svg></div>
+          <svg class="icon" viewBox="0 0 20 20"><path d="M4 4v12M16 4l-9 6 9 6z"/></svg>
+          <div class="sep"></div>
+          <span class="val mono">2,340 / 4,000 ms</span>
+        </div>
+      </div>
+      <div class="timeline">
+        <div class="tl-head">タイムライン <span class="hint">— コマをドラッグして並べ替え。クリックで選択</span></div>
+        <div class="tl-body">
+          <div class="tl-row">
+            <div class="tl-label">char</div>
+            <div class="tl-strip">
+              <div class="playhead" style="left:230px;"></div>
+              <div class="tl-cell" style="width:62px;"><span class="dur mono">125</span></div>
+              <div class="tl-cell" style="width:62px;"><span class="dur mono">125</span></div>
+              <div class="tl-cell selected" style="width:62px;"><span class="dur mono">125</span></div>
+              <div class="tl-cell" style="width:150px;"><span class="dur mono">999</span></div>
+              <div class="tl-cell" style="width:62px;"><span class="dur mono">125</span></div>
+              <div class="tl-cell" style="width:62px;"><span class="dur mono">125</span></div>
+              <div class="tl-cell" style="width:62px;"><span class="dur mono">125</span></div>
+              <div class="tl-cell" style="width:62px;"><span class="dur mono">125</span></div>
+            </div>
+          </div>
+          <div class="tl-row">
+            <div class="tl-label">fx_glow</div>
+            <div class="tl-strip">
+              <div class="tl-cell" style="width:76px;background:linear-gradient(160deg,oklch(0.35 0.12 60),oklch(0.25 0.08 40));"><span class="dur mono">250</span></div>
+              <div class="tl-cell" style="width:76px;background:linear-gradient(160deg,oklch(0.35 0.12 60),oklch(0.25 0.08 40));"><span class="dur mono">250</span></div>
+              <div class="tl-cell" style="width:76px;background:linear-gradient(160deg,oklch(0.35 0.12 60),oklch(0.25 0.08 40));"><span class="dur mono">250</span></div>
+              <div class="tl-cell" style="width:76px;background:linear-gradient(160deg,oklch(0.35 0.12 60),oklch(0.25 0.08 40));"><span class="dur mono">250</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="tip-card">
+        <div class="tip-title"><svg class="icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5"/><path d="M10 6.5v4M10 13.5h.01"/></svg>このステップでやること</div>
+        <p>コマの順番・表示時間を調整します。タイムラインでコマをドラッグして並べ替え、右の欄で表示時間(ms)を変えられます。</p>
+      </div>
+      <div class="insp-block">
+        <h4>選択中のコマ (char / 3枚目)</h4>
+        <div class="field"><label>表示時間</label><input class="numbox ctl mono" value="125 ms"></div>
+        <div class="field"><label>位置 dx</label><input class="numbox ctl mono" value="0"></div>
+        <div class="field"><label>位置 dy</label><input class="numbox ctl mono" value="0"></div>
+      </div>
+      <button class="next-btn">次へ: 透過・合成 →</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

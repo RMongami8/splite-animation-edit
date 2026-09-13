@@ -1,0 +1,51 @@
+{
+  "pages": [
+    { "id": "final", "name": "確定デザイン" },
+    { "id": "explore", "name": "検討案 (A/B/C)" }
+  ],
+  "artboards": [
+    { "file": "Home.dc.html", "x": 0, "y": 0, "w": 1280, "h": 800, "title": "ホーム", "page": "final" },
+    { "file": "Make.dc.html", "x": 1380, "y": 0, "w": 1440, "h": 860, "title": "①素材づくり", "page": "final" },
+    { "file": "Main.dc.html", "x": 2920, "y": 0, "w": 1440, "h": 900, "title": "②素材編集", "page": "final" },
+
+    { "file": "DirectionA_Home.dc.html", "x": 0, "y": 0, "w": 1280, "h": 800, "title": "A — ホーム", "page": "explore" },
+    { "file": "DirectionA_Make.dc.html", "x": 1380, "y": 0, "w": 1440, "h": 860, "title": "A — ①素材づくり", "page": "explore" },
+    { "file": "DirectionA_Edit.dc.html", "x": 2920, "y": 0, "w": 1440, "h": 900, "title": "A — ②素材編集", "page": "explore" },
+
+    { "file": "DirectionB_Home.dc.html", "x": 0, "y": 1040, "w": 1280, "h": 800, "title": "B — ホーム", "page": "explore" },
+    { "file": "DirectionB_Make.dc.html", "x": 1380, "y": 1040, "w": 1440, "h": 860, "title": "B — ①素材づくり", "page": "explore" },
+    { "file": "DirectionB_Edit.dc.html", "x": 2920, "y": 1040, "w": 1440, "h": 900, "title": "B — ②素材編集", "page": "explore" },
+
+    { "file": "DirectionC_Home.dc.html", "x": 0, "y": 2080, "w": 1280, "h": 800, "title": "C — ホーム", "page": "explore" },
+    { "file": "DirectionC_Make.dc.html", "x": 1380, "y": 2080, "w": 1440, "h": 860, "title": "C — ①素材づくり", "page": "explore" },
+    { "file": "DirectionC_Edit.dc.html", "x": 2920, "y": 2080, "w": 1440, "h": 900, "title": "C — ②素材編集", "page": "explore" }
+  ],
+  "annotations": [
+    {
+      "id": "final-note",
+      "x": 0, "y": -160, "w": 1000, "page": "final",
+      "text": "確定デザイン — 案A（レスポンシブ4分割の改善版）をベースに、ライトモードで仕上げたもの。検討時の3案比較は「検討案」ページに残しています。"
+    },
+    {
+      "id": "row-a",
+      "x": -320, "y": 300, "w": 280, "page": "explore",
+      "text": "案A — レスポンシブ4分割の改善版（採用）\n\n現行に近い4分割構成を維持しつつ、固定px指定をやめて流動グリッドに変更。折りたたみ可能な左右パネルと、上部の簡易ステップ表示で現状の問題を解決する。変更が少なく着地が早い。"
+    },
+    {
+      "id": "row-b",
+      "x": -320, "y": 1340, "w": 280, "page": "explore",
+      "text": "案B — ステップウィザード型\n\n上部に明示的なステッパーを置き、今どの段階かを画面自体が示す。各ステップでは関連ツールだけを前面に出し、他は畳む。「操作ステップが分かりにくい」という問題に最も直接的に効く。"
+    },
+    {
+      "id": "row-c",
+      "x": -320, "y": 2380, "w": 280, "page": "explore",
+      "text": "案C — プロツール風ドッキングパネル\n\n左にアイコンレール、キャンバスを常に最大化。Photoshop/Clip Studioに近い操作感。パネルは必要な時だけ展開するため画面が広く使えるが、初見の分かりやすさでは案Bに劣る。"
+    },
+    {
+      "id": "col-note",
+      "x": 0, "y": -140, "w": 1280, "page": "explore",
+      "text": "3方向 × 3画面（ホーム／①素材づくり／②素材編集）の比較（検討時のダークモード案）。②素材編集が現状最も使いにくいと指摘された画面のため、各案で最も作り込んでいます。"
+    }
+  ],
+  "launch": { "view": "canvas", "page": "final" }
+}
