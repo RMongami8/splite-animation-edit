@@ -270,3 +270,21 @@ GitHub にプッシュ後、無料でWeb上に公開したいとの要望。
 - HFのSpace作成画面に「GitHubからインポート」欄が見当たらなかったため、
   Space作成後は `git push <space-remote> main` で手動同期する運用とした
   (HFのgit認証はユーザー自身の端末で入力してもらう。トークンを代行入力しない)。
+
+## Render への切り替え（ユーザー要望 / 2026-09-13、続き）
+
+Hugging Face Spaces のこのアカウントでは、Docker SDK が要認証(Paid表示)、
+Gradio SDK の無料枠はZeroGPU専用(CPU basicはPRO会員のみ)と判明。
+`@spaces.GPU` ダミー関数で回避する案とRenderへ切替える案を提示し、
+ユーザーは **Render.com への切替**を選択。
+
+- `app.py` のクラウド判定を一般化: `$PORT` が環境変数にあれば(Render/Heroku等の
+  慣習)、または `$SPACE_ID` があれば「クラウド上」とみなし `0.0.0.0` で待受け、
+  ポートは `$PORT`(無ければ HF の既定7860)を使う。ローカル(run.bat)は
+  どちらも無いので従来どおり `127.0.0.1:8420`。
+- 既存の Dockerfile(HF Spaces向けに用意)はそのまま Render でも使う
+  (Render は Environment=Docker を選ぶとリポジトリ直下の Dockerfile を自動使用)。
+- HF Space(`RyoMon1999/splite-animation-edit`)は ZeroGPU のまま起動エラーの状態で
+  放置(ユーザー判断で削除するかは未定)。`git remote`の`space`は使わなくなったが
+  残しても無害なため削除はしていない。
+- README.md からHF Spaces frontmatterを削除し、Renderの手順に置き換えた。
