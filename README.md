@@ -2,7 +2,7 @@
 title: SpriteSheet Studio
 emoji: 🧩
 colorFrom: yellow
-colorTo: orange
+colorTo: red
 sdk: gradio
 sdk_version: 6.27.0
 python_version: "3.12"
