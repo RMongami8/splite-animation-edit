@@ -3,8 +3,9 @@ title: SpriteSheet Studio
 emoji: 🧩
 colorFrom: yellow
 colorTo: orange
-sdk: docker
-app_port: 7860
+sdk: gradio
+python_version: "3.11"
+app_file: app.py
 pinned: false
 ---
 
@@ -13,6 +14,17 @@ pinned: false
 参照画像・動画からコマ送りアニメーションシート（スプライトシート）を作るための
 Web ツールです。動画・連番画像・グリッドシートを取り込み、レイヤーとタイムラインで
 編集し、シート/GIF/MP4 等に書き出します（書き出し機能は実装中）。
+
+## このリポジトリを Hugging Face Spaces で動かす場合の注意
+
+SDK は **Gradio** を選んでください（Docker SDK はアカウント未認証だと使えないため）。
+中身は Gradio を使わず、このリポジトリの `app.py` がそのまま FastAPI サーバーを
+起動します（Gradio Space は「Python を実行できる無料コンテナ」として使っています）。
+`SPACE_ID` 環境変数が立っている（＝Spaces上で動いている）ことを `app.py` が検知して
+自動的に `0.0.0.0:7860` で待ち受けるので、追加の環境変数設定は不要です。
+
+`Dockerfile` はアカウント認証済み・または他のホスティング先（Render 等）で
+Docker SDK を使いたくなったときのために残してあります。
 
 ## ⚠️ このURLで公開されている版について
 

@@ -248,3 +248,25 @@ matte 501/400）と既存 selftest 全 PASS。ブラウザで cp_dummy を使い
 - 編集モード中もコマ送り（パネルの前/次ボタン、ステージの左右ボタン、キー , と .）。コマ送り中の変更は TransformEdit の base に積み、確定で PUT 1回（Undo 1回）。矢印キーは編集中は位置の微調整のまま。
 - ウィザードの③を「再生の速さ」に言い換え、選択に応じた具体的な説明文と、再生時間（秒）・平均コマ/秒を表示。最後のコマの長さは折りたたみに移動。
 - **罠: ブラウザが古い js をキャッシュしたまま新しい index.html を読むと、インラインスクリプトが未定義関数で止まり画面が動かない。** index.html の script src に ?v=日付 を付けた。js を変えたら v を上げること。
+
+## Hugging Face Spaces デプロイ（ユーザー要望 / 2026-09-13）
+
+GitHub にプッシュ後、無料でWeb上に公開したいとの要望。
+`https://github.com/RMongami8/splite-animation-edit`
+
+- 当初 Docker SDK 向けに Dockerfile を用意したが、**未認証アカウントは Docker SDK が
+  ロックされている（Paid 表示）**ことが判明。カード登録なしの前提と矛盾するため、
+  **Gradio SDK を使い、Gradio自体は使わず app.py で直接 FastAPI を起動する**方式に変更。
+  Dockerfile は認証済みアカウント/他ホスティング用に残す。
+- `app.py` は `SPACE_ID` 環境変数(Spacesコンテナに常に存在)を見て
+  host/port を自動判定する(Spaces: 0.0.0.0:7860 / ローカル: 127.0.0.1:8420、
+  run.bat からの起動は無変更で動く)。ユーザーがSpace側で環境変数を設定する必要はない。
+- README.md の先頭に HF Spaces 用 YAML frontmatter(`sdk: gradio`,
+  `python_version: "3.11"`)を付けた。3.11を明示するのは、コードが
+  `str | None` 等PEP604構文(3.10+)を使うため。
+- ログイン機能が無い(公開すると誰でも閲覧・編集・削除できる)ことと、無料枠は
+  再起動でデータが消えうることをユーザーに確認済み。ユーザーの選択:
+  「このまま公開する」(パスワード無し)。
+- HFのSpace作成画面に「GitHubからインポート」欄が見当たらなかったため、
+  Space作成後は `git push <space-remote> main` で手動同期する運用とした
+  (HFのgit認証はユーザー自身の端末で入力してもらう。トークンを代行入力しない)。
